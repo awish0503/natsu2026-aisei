@@ -849,6 +849,13 @@
       </div>
     </div>
 
+    <div class="card">
+      <div class="section-title">📖 よんだ ほんの きろく</div>
+      <input type="text" id="bookInput" placeholder="ほんの なまえを かいてね">
+      <button class="save-btn" id="bookSaveBtn">きろくする</button>
+      <div class="book-list" id="bookList"></div>
+    </div>
+
     <div class="grid-row-pair stack-right">
       <div class="card">
         <div class="progress-summary">
@@ -858,7 +865,7 @@
               <circle id="todayRingFg" cx="31" cy="31" r="26" stroke="#E14B3E" stroke-width="8" fill="none"
                 stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="163.4"/>
             </svg>
-            <div class="ring-label" id="todayRingLabel">0/17</div>
+            <div class="ring-label" id="todayRingLabel">0/13</div>
           </div>
           <div class="msg">きょうの スタンプ、<br>あと <b id="todayRemainCount">-</b> こ おせば ぜんぶ たまるよ!</div>
         </div>
@@ -904,12 +911,6 @@
       <button class="save-btn" id="diarySaveBtn">にっきを ほぞんする</button>
     </div>
 
-    <div class="card">
-      <div class="section-title">📖 よんだ ほんの きろく</div>
-      <input type="text" id="bookInput" placeholder="ほんの なまえを かいてね">
-      <button class="save-btn" id="bookSaveBtn">きろくする</button>
-      <div class="book-list" id="bookList"></div>
-    </div>
   </div>
 
   <!-- ============ HOMEWORK VIEW ============ -->
@@ -1015,14 +1016,15 @@ const HABITS = [
   {id:'soccer', name:'さっかーれんしゅう', emoji:'⚽', group:'karada'},
   {id:'soto', name:'そとにいく', emoji:'☀️', group:'karada'},
 
-  {id:'sentaku', name:'せんたくものおてつだい', emoji:'👕', group:'otetsudai'},
-  {id:'osouji', name:'おそうじ', emoji:'🧹', group:'otetsudai'},
+  {id:'sentaku', name:'せんたくものたたみ', emoji:'👕', group:'otetsudai'},
+  {id:'osouji', name:'おふろそうじ', emoji:'🛁', group:'otetsudai'},
   {id:'oheya', name:'おへやの おかたづけ', emoji:'🧸', group:'otetsudai'},
   {id:'futon_shiku', name:'ふとんを しく', emoji:'🛏️', group:'otetsudai'},
   {id:'futon_tatamu', name:'ふとんを たたむ', emoji:'🛏️', group:'otetsudai'},
+  {id:'okaimono', name:'おかいもの', emoji:'🛒', group:'otetsudai'},
 
-  {id:'hamigaki', name:'はみがき', emoji:'🪥', group:'kokoro'},
-  {id:'ehon', name:'えほんよみ', emoji:'📖', group:'kokoro'},
+  {id:'hamigaki_asa', name:'あさ はみがき', emoji:'🪥', group:'kokoro'},
+  {id:'hamigaki_yoru', name:'よる はみがき', emoji:'🪥', group:'kokoro'},
   {id:'ichigyounikki', name:'なつの いちぎょうにっき', emoji:'✍️', group:'kokoro'},
 ];
 
@@ -1040,6 +1042,8 @@ const HOMEWORK = [
   {id:'hiragana', name:'ならった ひらがな', total:3, emoji:'🈶'},
   {id:'sansu2', name:'ならった さんすう', total:3, emoji:'🔢'},
   {id:'katakana', name:'たのしくおぼえる かたかな', total:7, emoji:'🈸'},
+  {id:'kakunin_sansu', name:'かくにんテスト さんすう', total:1, emoji:'📐'},
+  {id:'kakunin_kokugo', name:'かくにんテスト こくご', total:1, emoji:'📝'},
 ];
 
 const ONETIME = [
