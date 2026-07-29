@@ -1,996 +1,138 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>あいせいの なつやすみ たんけんノート</title>
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FFC94D">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="なつやすみノート">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<link rel="icon" href="icons/icon-192.png">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800;900&display=swap" rel="stylesheet">
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>読了帳 - 人間革命</title>
+<!-- PWA manifest -->
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#7a3b34" />
+<!-- iOS ホーム画面対応 -->
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="読了帳" />
 <style>
-  :root{
-    --bg:#FFF9EC;
-    --paper:#FFFFFF;
-    --sky:#4FB8CB;
-    --sky-deep:#2E97AC;
-    --sun:#FFC94D;
-    --sun-deep:#F0A400;
-    --ink:#4A3B32;
-    --ink-soft:#8A7A6C;
-    --asagao:#8B7FD1;
-    --asagao-bg:#EFEBFB;
-    --leaf:#4E9E63;
-    --leaf-bg:#E9F5EA;
-    --tetsudai:#E4A020;
-    --tetsudai-bg:#FCF1DA;
-    --watermelon:#F0645A;
-    --watermelon-bg:#FDEAE8;
-    --stamp:#E14B3E;
-    --line:#EFE4D2;
-    --shadow: 0 4px 14px rgba(74,59,50,0.08);
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:
-      radial-gradient(circle at 92% 4%, rgba(255,201,77,0.35), transparent 40%),
-      radial-gradient(circle at 6% 96%, rgba(79,184,203,0.25), transparent 45%),
-      var(--bg);
-    font-family:'M PLUS Rounded 1c', sans-serif;
-    color:var(--ink);
-    min-height:100vh;
-  }
-  .app{
-    max-width:480px;
-    margin:0 auto;
-    padding:18px 14px 90px;
-  }
-  @media(min-width:760px){
-    .app{max-width:900px;}
-  }
-  header.top{
-    text-align:center;
-    padding:8px 0 14px;
-  }
-  header.top .kicker{
-    font-size:12px;
-    letter-spacing:.14em;
-    color:var(--sky-deep);
-    font-weight:700;
-  }
-  header.top h1{
-    margin:4px 0 2px;
-    font-size:22px;
-    font-weight:900;
-    line-height:1.3;
-  }
-  header.top .today-date{
-    font-size:13px;
-    color:var(--ink-soft);
-    font-weight:700;
-  }
-  header.top .shared-note{
-    display:inline-block;
-    margin-top:8px;
-    font-size:11px;
-    font-weight:800;
-    color:var(--leaf);
-    background:var(--leaf-bg);
-    padding:5px 12px;
-    border-radius:99px;
-  }
-  .sync-badge{
-    display:inline-flex;
-    align-items:center;
-    gap:5px;
-    margin-top:8px;
-    margin-left:6px;
-    font-size:11px;
-    font-weight:800;
-    padding:5px 12px;
-    border-radius:99px;
-  }
-  .sync-badge.ok{color:var(--sky-deep);background:#E7F5F8;}
-  .sync-badge.busy{color:var(--tetsudai);background:var(--tetsudai-bg);}
-  .sync-badge.off{color:var(--watermelon);background:var(--watermelon-bg);}
-  .date-switch-row{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
-    margin-bottom:6px;
-  }
-  .date-switch-row .ds-btn{
-    width:36px;height:36px;
-    border-radius:50%;
-    border:none;
-    background:var(--sky);
-    color:#fff;
-    font-size:15px;
-    font-weight:900;
-    cursor:pointer;
-    font-family:inherit;
-    flex-shrink:0;
-  }
-  .date-switch-row .ds-center{
-    text-align:center;
-  }
-  .date-switch-row input[type=date]{
-    font-family:inherit;
-    font-weight:800;
-    font-size:12.5px;
-    border:2px solid var(--line);
-    border-radius:10px;
-    padding:5px 8px;
-    background:#fff;
-    color:var(--ink);
-  }
-  .jump-today-btn{
-    display:block;
-    margin:0 auto 14px;
-    border:2px solid var(--stamp);
-    background:#fff;
-    color:var(--stamp);
-    font-family:inherit;
-    font-weight:800;
-    font-size:12px;
-    padding:6px 14px;
-    border-radius:99px;
-    cursor:pointer;
-  }
-  .hw-date-note{
-    text-align:center;
-    font-size:12px;
-    font-weight:800;
-    color:var(--ink-soft);
-    margin-bottom:10px;
-    background:var(--paper);
-    border:2px dashed var(--line);
-    border-radius:99px;
-    padding:7px 10px;
-  }
-  input[type=number]{
-    -moz-appearance:textfield;
-  }
-  input[type=number]::-webkit-inner-spin-button,
-  input[type=number]::-webkit-outer-spin-button{
-    -webkit-appearance:none;
-    margin:0;
-  }
-  input[type=file]{
-    width:100%;
-    font-family:inherit;
-    font-size:12px;
-    font-weight:700;
-    padding:9px 10px;
-    border-radius:12px;
-    border:2px solid var(--line);
-    background:#FFFDF8;
-    color:var(--ink);
-  }
-  .init-loading{
-    text-align:center;
-    font-size:13px;
-    font-weight:800;
-    color:var(--ink-soft);
-    padding:16px 0;
-  }
-  .load-warning{
-    background:var(--watermelon-bg);
-    border:2px solid var(--watermelon);
-    border-radius:14px;
-    padding:10px 14px;
-    text-align:center;
-    font-size:12.5px;
-    font-weight:800;
-    color:var(--watermelon);
-    margin-bottom:12px;
-  }
-  .load-warning button{
-    margin-top:6px;
-    border:none;
-    background:var(--watermelon);
-    color:#fff;
-    font-family:inherit;
-    font-weight:800;
-    font-size:12px;
-    padding:7px 14px;
-    border-radius:99px;
-    cursor:pointer;
-  }
-  .backup-reminder{
-    background:var(--tetsudai-bg);
-    border:2px solid var(--tetsudai);
-    border-radius:14px;
-    padding:10px 14px;
-    text-align:center;
-    font-size:12.5px;
-    font-weight:800;
-    color:var(--tetsudai);
-    margin-bottom:12px;
-  }
-
-  .graph-section{margin-bottom:26px;}
-  .graph-section:last-child{margin-bottom:0;}
-  .graph-section-title{
-    font-size:13.5px;
-    font-weight:900;
-    margin-bottom:6px;
-    padding-bottom:4px;
-    border-bottom:3px solid var(--sun);
-    display:inline-block;
-  }
-  .graph-table-wrap{
-    overflow-x:auto;
-    margin-top:0;
-    -webkit-overflow-scrolling:touch;
-  }
-  .graph-table-wrap table{
-    border-collapse:collapse;
-    font-size:11px;
-    width:100%;
-  }
-  .graph-table-wrap th, .graph-table-wrap td{
-    border:1px solid var(--line);
-    padding:5px 7px;
-    text-align:center;
-    white-space:nowrap;
-    font-weight:700;
-  }
-  .graph-table-wrap th{
-    background:var(--bg);
-    font-weight:800;
-    font-size:10px;
-    line-height:1.4;
-    min-width:64px;
-    max-width:90px;
-    white-space:normal;
-    word-break:break-word;
-    vertical-align:top;
-    padding:6px 4px;
-  }
-  .graph-table-wrap td.date-col, .graph-table-wrap th.date-col{
-    position:sticky;
-    left:0;
-    background:#fff;
-    z-index:2;
-    font-weight:800;
-    color:var(--ink-soft);
-  }
-  .graph-table-wrap th.date-col{background:var(--bg);z-index:3;}
-  .graph-table-wrap td.hit{color:var(--stamp);font-size:14px;}
-  .graph-table-wrap td.num{color:var(--sky-deep);}
-  nav.tabs{
-    position:fixed;
-    bottom:0; left:0; right:0;
-    background:var(--paper);
-    border-top:3px solid var(--line);
-    display:flex;
-    max-width:480px;
-    margin:0 auto;
-    z-index:50;
-    box-shadow:0 -6px 18px rgba(74,59,50,0.08);
-  }
-  @media(min-width:760px){
-    nav.tabs{max-width:900px;}
-  }
-  nav.tabs button{
-    flex:1;
-    background:none;
-    border:none;
-    font-family:inherit;
-    font-weight:800;
-    font-size:12px;
-    color:var(--ink-soft);
-    padding:10px 2px 8px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:2px;
-    cursor:pointer;
-  }
-  nav.tabs button .ico{font-size:20px;}
-  nav.tabs button.active{color:var(--stamp);}
-  nav.tabs button.active .ico{transform:translateY(-2px);}
-
-  .card{
-    background:var(--paper);
-    border-radius:20px;
-    padding:16px;
-    box-shadow:var(--shadow);
-    margin-bottom:16px;
-    border:2px solid var(--line);
-  }
-  .section-title{
-    font-size:15px;
-    font-weight:900;
-    margin:0 0 10px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .section-title .badge{
-    font-size:11px;
-    background:var(--sky);
-    color:#fff;
-    padding:2px 9px;
-    border-radius:99px;
-    font-weight:800;
-  }
-
-  .group{margin-bottom:14px;}
-  .group:last-child{margin-bottom:0;}
-  .group h3{
-    font-size:12.5px;
-    font-weight:800;
-    margin:0 0 8px;
-    display:flex;
-    align-items:center;
-    gap:6px;
-  }
-  .group h3 .dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
-  .chip-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:8px;
-  }
-  .chip{
-    position:relative;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    background:var(--bg-tint,#FAF6EC);
-    border:2px solid var(--border-tint,var(--line));
-    border-radius:14px;
-    padding:9px 10px;
-    cursor:pointer;
-    text-align:left;
-    font-family:inherit;
-    font-weight:700;
-    font-size:12.5px;
-    color:var(--ink);
-    transition:transform .12s ease;
-    overflow:hidden;
-  }
-  .chip:active{transform:scale(0.96);}
-  .chip .emoji{font-size:19px;flex-shrink:0;}
-  .chip .label{line-height:1.25;}
-  .chip.done{
-    background:var(--done-bg,#fff);
-    border-color:var(--done-border,var(--stamp));
-  }
-  .chip .stamp{
-    position:absolute;
-    right:6px;
-    top:50%;
-    transform:translateY(-50%) rotate(-14deg) scale(0);
-    font-size:26px;
-    opacity:0;
-    pointer-events:none;
-  }
-  .chip.done .stamp{
-    opacity:1;
-    animation:stampPop .32s cubic-bezier(.2,1.6,.4,1) forwards;
-  }
-  @keyframes stampPop{
-    0%{transform:translateY(-50%) rotate(-14deg) scale(0);}
-    60%{transform:translateY(-50%) rotate(-14deg) scale(1.25);}
-    100%{transform:translateY(-50%) rotate(-14deg) scale(1);}
-  }
-
-  .progress-summary{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-bottom:14px;
-  }
-  .ring{
-    position:relative;
-    width:62px;height:62px;flex-shrink:0;
-  }
-  .ring svg{transform:rotate(-90deg);}
-  .ring .ring-label{
-    position:absolute;inset:0;
-    display:flex;align-items:center;justify-content:center;
-    font-weight:900;font-size:14px;color:var(--ink);
-  }
-  .progress-summary .msg{font-size:13px;font-weight:700;color:var(--ink-soft);line-height:1.4;}
-  .progress-summary .msg b{color:var(--stamp);}
-
-  .hw-item{margin-bottom:20px;position:relative;}
-  .complete-stamp{
-    position:absolute;
-    top:-8px; right:-6px;
-    background:var(--stamp);
-    color:#fff;
-    font-weight:900;
-    font-size:12px;
-    padding:5px 12px;
-    border-radius:99px;
-    transform:rotate(8deg);
-    box-shadow:0 3px 8px rgba(225,75,62,0.4);
-    z-index:2;
-  }
-  .hw-item:last-child{margin-bottom:0;}
-  .hw-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
-  .hw-head .name{font-weight:800;font-size:13.5px;}
-  .hw-head .frac{font-size:12px;font-weight:800;color:var(--ink-soft);}
-  .tree-wrap{
-    display:flex;
-    align-items:flex-end;
-    gap:12px;
-  }
-  .tree{
-    position:relative;
-    width:34px;
-    height:96px;
-    flex-shrink:0;
-  }
-  .tree .trunk{
-    position:absolute;
-    left:50%;bottom:0;
-    transform:translateX(-50%);
-    width:10px;
-    height:100%;
-    background:linear-gradient(180deg,#EDE0C8,#D8C29B);
-    border-radius:6px;
-    border:2px solid #C7AE82;
-  }
-  .tree .trunk::before, .tree .trunk::after{
-    content:"";
-    position:absolute;
-    width:16px;height:16px;
-    border-radius:50%;
-    background:var(--leaf);
-    top:-8px;
-  }
-  .tree .trunk::before{left:-14px;}
-  .tree .trunk::after{right:-14px;top:-2px;}
-  .tree .beetle{
-    position:absolute;
-    left:50%;
-    transform:translate(-50%, 50%);
-    font-size:20px;
-    transition:bottom .45s cubic-bezier(.3,1.4,.4,1);
-    filter:drop-shadow(0 2px 2px rgba(0,0,0,0.2));
-  }
-  .hw-controls{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .stepper{
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .stepper button{
-    width:36px;height:36px;
-    border-radius:50%;
-    border:none;
-    background:var(--sky);
-    color:#fff;
-    font-size:18px;
-    font-weight:900;
-    cursor:pointer;
-    font-family:inherit;
-  }
-  .stepper button:disabled{background:#DDD;color:#aaa;cursor:default;}
-  .stepper .pages-left{font-size:12px;color:var(--ink-soft);font-weight:700;}
-  .bar-track{
-    height:9px;background:var(--line);border-radius:99px;overflow:hidden;
-  }
-  .bar-fill{
-    height:100%;background:linear-gradient(90deg,var(--leaf),#7FC98F);
-    border-radius:99px;
-    transition:width .4s ease;
-  }
-  .hw-complete-msg{
-    font-size:11.5px;font-weight:800;color:var(--leaf);margin-top:4px;
-  }
-
-  .onetime-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:10px 4px;
-    border-bottom:2px dashed var(--line);
-  }
-  .onetime-row:last-child{border-bottom:none;}
-  .onetime-row .emoji{font-size:20px;}
-  .onetime-row .label{flex:1;font-size:13px;font-weight:700;}
-  .onetime-row button{
-    border:2px solid var(--stamp);
-    background:#fff;
-    color:var(--stamp);
-    font-family:inherit;
-    font-weight:800;
-    font-size:11.5px;
-    padding:6px 12px;
-    border-radius:99px;
-    cursor:pointer;
-  }
-  .onetime-row.done button{
-    background:var(--stamp);
-    color:#fff;
-  }
-
-  .field-label{font-size:12px;font-weight:800;color:var(--ink-soft);margin:0 0 5px;}
-  .weather-row{display:flex;gap:6px;margin-bottom:12px;}
-  .weather-row button{
-    flex:1;
-    font-size:20px;
-    padding:8px 0;
-    border-radius:12px;
-    border:2px solid var(--line);
-    background:#fff;
-    cursor:pointer;
-  }
-  .weather-row button.sel{border-color:var(--sun-deep);background:var(--sun);}
-  textarea, input[type=text]{
-    width:100%;
-    font-family:inherit;
-    font-size:13.5px;
-    padding:10px 12px;
-    border-radius:12px;
-    border:2px solid var(--line);
-    background:#FFFDF8;
-    color:var(--ink);
-    resize:none;
-  }
-  textarea{min-height:56px;margin-bottom:10px;}
-  input[type=text]{margin-bottom:10px;}
-  .save-btn{
-    width:100%;
-    background:var(--sky);
-    color:#fff;
-    border:none;
-    font-family:inherit;
-    font-weight:900;
-    font-size:14px;
-    padding:12px;
-    border-radius:14px;
-    cursor:pointer;
-    box-shadow:0 4px 0 var(--sky-deep);
-  }
-  .save-btn:active{transform:translateY(3px);box-shadow:none;}
-  .save-btn.saved{background:var(--leaf);box-shadow:0 4px 0 #3d8a4f;}
-
-  .book-list{margin-top:10px;}
-  .book-list.scroll-list{max-height:210px;overflow-y:auto;}
-  .book-list .book-row{
-    display:flex;gap:8px;align-items:center;
-    font-size:12.5px;font-weight:700;
-    padding:6px 0;
-    border-bottom:1px dashed var(--line);
-  }
-  .book-list .book-row .d{color:var(--ink-soft);font-size:11px;flex-shrink:0;width:64px;}
-  .book-list .book-row .txt{flex:1;line-height:1.35;}
-  .book-list .book-row .row-actions{display:flex;gap:4px;flex-shrink:0;}
-  .book-list .book-row .row-actions button{
-    border:none;background:none;font-size:14px;cursor:pointer;
-    padding:2px 4px;border-radius:6px;line-height:1;
-  }
-  .book-list .book-row .row-actions button:active{background:var(--line);}
-
-  .counter-item{margin-bottom:20px;position:relative;}
-  .counter-item:last-child{margin-bottom:0;}
-  .counter-add-row{
-    display:flex;align-items:center;gap:8px;margin-bottom:8px;
-  }
-  .counter-add-row .add-amount{flex-shrink:0;}
-  .counter-add-row .counter-record-btn{
-    flex:1;padding:11px;font-size:13px;
-  }
-  .counter-controls{
-    display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;
-  }
-  .counter-controls .mini-btn{
-    border:none;font-family:inherit;font-weight:800;font-size:11.5px;
-    padding:7px 11px;border-radius:99px;cursor:pointer;
-  }
-  .counter-controls .mini-btn.minus{background:var(--watermelon-bg);color:var(--watermelon);}
-  .counter-controls .mini-btn.target{background:#fff;color:var(--ink-soft);border:2px solid var(--line);}
-  .add-amount{
-    width:52px;padding:8px 4px;text-align:center;border-radius:10px;
-    border:2px solid var(--line);font-family:inherit;font-weight:800;font-size:13px;
-  }
-  .target-edit{
-    display:flex;align-items:center;gap:6px;margin-top:8px;
-    background:var(--bg);padding:8px 10px;border-radius:12px;
-  }
-  .target-edit input{width:70px;padding:7px;border-radius:8px;border:2px solid var(--line);font-family:inherit;font-weight:800;text-align:center;}
-  .target-edit button{
-    border:none;background:var(--leaf);color:#fff;font-family:inherit;font-weight:800;
-    padding:7px 12px;border-radius:8px;cursor:pointer;font-size:12px;
-  }
-  .milestone-note{font-size:11.5px;font-weight:800;color:var(--leaf);margin-top:6px;}
-
-  .kintore-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:8px;
-    margin-bottom:12px;
-  }
-  .kintore-field{
-    background:var(--leaf-bg);
-    border-radius:12px;
-    padding:8px 6px;
-    text-align:center;
-  }
-  .kintore-field label{
-    display:block;
-    font-size:11px;
-    font-weight:800;
-    color:var(--ink-soft);
-    margin-bottom:6px;
-  }
-  .kintore-input-row{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:4px;
-  }
-  .kintore-input-row input{
-    width:52px;
-    padding:6px 4px;
-    text-align:center;
-    border-radius:8px;
-    border:2px solid var(--line);
-    font-family:inherit;
-    font-weight:800;
-    font-size:13px;
-  }
-  .kintore-input-row span{
-    font-size:11px;
-    font-weight:700;
-    color:var(--ink-soft);
-  }
-
-  .app-toast{
-    position:fixed;
-    top:14px;left:50%;
-    transform:translate(-50%,-140%);
-    background:var(--ink);
-    color:#fff;
-    font-family:'M PLUS Rounded 1c', sans-serif;
-    font-weight:800;
-    font-size:12.5px;
-    padding:11px 18px;
-    border-radius:99px;
-    box-shadow:0 6px 18px rgba(0,0,0,0.25);
-    z-index:200;
-    max-width:88%;
-    text-align:center;
-    transition:transform .3s cubic-bezier(.3,1.4,.4,1);
-    pointer-events:none;
-  }
-  .app-toast.show{
-    transform:translate(-50%,0);
-  }
-
-  .month-label{font-weight:900;font-size:14px;margin:6px 0 8px;}
-  .cal-grid{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:5px;
-  }
-  .cal-dow{
-    text-align:center;font-size:10px;font-weight:800;color:var(--ink-soft);
-  }
-  .cal-cell{
-    aspect-ratio:1;
-    border-radius:10px;
-    border:2px solid var(--line);
-    background:#FFFDF8;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    font-size:11px;
-    font-weight:800;
-    cursor:pointer;
-    position:relative;
-    padding:2px;
-  }
-  .cal-cell.empty{border:none;background:none;cursor:default;}
-  .cal-cell.today{border-color:var(--stamp);border-width:3px;}
-  .cal-cell.selected{background:var(--sun);}
-  .cal-cell.selected.today{background:var(--sun);border-color:var(--stamp);}
-  .cal-cell .dots{display:flex;gap:2px;margin-top:2px;}
-  .cal-cell .dots span{width:5px;height:5px;border-radius:50%;background:var(--leaf);}
-  .cal-cell .diary-mark{position:absolute;top:2px;right:3px;font-size:8px;}
-
-  .report-hero{
-    text-align:center;
-    padding:10px 0 16px;
-  }
-  .report-hero .big-emoji{font-size:44px;}
-  .report-hero h2{margin:6px 0 2px;font-size:18px;font-weight:900;}
-  .report-hero .sub{font-size:12.5px;color:var(--ink-soft);font-weight:700;}
-  .report-list{list-style:none;padding:0;margin:0;}
-  .report-list li{
-    display:flex;align-items:center;gap:10px;
-    padding:9px 4px;
-    border-bottom:2px dashed var(--line);
-    font-size:13.5px;font-weight:800;
-  }
-  .report-list li:last-child{border-bottom:none;}
-  .report-list li .emoji{font-size:20px;}
-  .report-empty{
-    text-align:center;color:var(--ink-soft);font-weight:700;font-size:13px;padding:20px 0;
-  }
-  .diary-quote{
-    background:var(--sun);
-    border-radius:14px;
-    padding:12px 14px;
-    font-size:13px;
-    font-weight:700;
-    margin-top:14px;
-    line-height:1.5;
-  }
-  .streak-banner{
-    display:flex;align-items:center;gap:10px;
-    background:var(--asagao-bg);
-    border-radius:16px;
-    padding:12px 14px;
-    margin-bottom:16px;
-  }
-  .streak-banner .n{font-size:26px;font-weight:900;color:var(--asagao);}
-  .streak-banner .t{font-size:12px;font-weight:800;color:var(--ink-soft);}
-
-  .hidden{display:none !important;}
-
-  .grid-row-pair{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:16px;
-  }
-  .grid-row-pair.stack-right > .card:first-child{margin-bottom:16px;}
-  @media(min-width:760px){
-    .grid-row-pair{
-      grid-template-columns:1fr 1fr;
-      align-items:start;
-    }
-    .grid-row-pair > .card{margin-bottom:0 !important;}
-    .grid-row-pair.stack-right > .card:first-child{
-      grid-row: span 2;
-    }
-    .grid-row-pair.stack-right{
-      grid-template-rows:auto auto;
-    }
-  }
+:root{
+  --ink:#7a3b34;
+  --ink-dark:#4a2622;
+  --paper:#f7f2e7;
+  --paper-deep:#efe6d3;
+  --line:#d8cbb0;
+  --muted:#8c7d64;
+  --paper-card:#fffdf8;
+}
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body{ margin:0; padding:0; height:100%; }
+body{
+  background:var(--paper);
+  color:var(--ink-dark);
+  font-family:"Hiragino Mincho ProN","Yu Mincho",serif;
+  overscroll-behavior:none;
+}
+#app{ max-width:640px; margin:0 auto; min-height:100vh; padding-bottom:48px; }
+header{
+  border-bottom:2px solid var(--ink);
+  background:var(--paper-deep);
+  padding:calc(env(safe-area-inset-top) + 20px) 20px 16px;
+}
+header .row{ display:flex; align-items:baseline; justify-content:space-between; }
+header h1{ color:var(--ink); letter-spacing:.08em; font-size:1.25rem; margin:0; font-weight:700; }
+header .status{ color:var(--muted); font-size:.72rem; }
+header p{ color:var(--muted); font-size:.75rem; margin:.4rem 0 0; }
+nav.tabs{ display:flex; gap:2px; padding:12px 10px 0; overflow-x:auto; }
+nav.tabs button{
+  background:none; border:none; font-family:inherit;
+  color:var(--muted); font-size:.9rem; padding:8px 12px;
+  border-bottom:3px solid transparent; white-space:nowrap; cursor:pointer;
+}
+nav.tabs button.active{ color:var(--ink); font-weight:700; border-bottom-color:var(--ink); }
+.tabs-divider{ border-bottom:1px solid var(--line); }
+main{ padding:16px; }
+.progress-wrap{ margin-bottom:16px; }
+.progress-label{ display:flex; justify-content:space-between; font-size:.75rem; color:var(--muted); margin-bottom:4px; }
+.progress-track{ background:var(--line); height:6px; border-radius:3px; overflow:hidden; }
+.progress-fill{ background:var(--ink); height:6px; transition:width .3s ease; }
+.vol-card{ border:1px solid var(--line); background:var(--paper-card); border-radius:6px; margin-bottom:10px; }
+.vol-head{
+  width:100%; background:none; border:none; font-family:inherit;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 12px; cursor:pointer; color:var(--ink); font-size:.92rem; font-weight:700;
+}
+.vol-head .left{ display:flex; align-items:center; gap:8px; }
+.vol-head .count{ color:var(--muted); font-size:.75rem; font-weight:400; }
+.vol-body{ padding:0 12px 10px; display:none; }
+.vol-body.open{ display:block; }
+.chapter-row{
+  display:flex; align-items:center; gap:10px; padding:8px 0;
+  border-bottom:1px dashed var(--line);
+}
+.chapter-row:last-child{ border-bottom:none; }
+.chk{
+  width:20px; height:20px; border:1.5px solid var(--ink); border-radius:3px;
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  background:transparent; cursor:pointer;
+}
+.chk.done{ background:var(--ink); }
+.chk svg{ display:none; }
+.chk.done svg{ display:block; }
+.chapter-title{ flex:1; font-size:.9rem; }
+.chapter-title.done{ color:var(--muted); }
+.chapter-date{ font-size:.7rem; color:var(--muted); }
+.add-vol-btn{
+  width:100%; background:none; border:1px dashed var(--ink); color:var(--ink);
+  font-family:inherit; font-size:.85rem; padding:10px; border-radius:6px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.add-vol-form{ border:1px dashed var(--ink); border-radius:6px; padding:12px; }
+.add-vol-form .row{ display:flex; gap:8px; margin-bottom:8px; }
+.add-vol-form input{
+  border:1px solid var(--line); background:var(--paper-card); border-radius:4px;
+  padding:6px 8px; font-size:.85rem; font-family:inherit;
+}
+.add-vol-form input.num{ width:70px; }
+.add-vol-form input.chs{ flex:1; }
+.add-vol-form .actions{ display:flex; justify-content:flex-end; gap:8px; }
+.btn-ghost{ background:none; border:none; color:var(--muted); font-size:.8rem; font-family:inherit; cursor:pointer; }
+.btn-ink{ background:var(--ink); color:var(--paper); border:none; border-radius:4px; padding:6px 14px; font-size:.8rem; font-family:inherit; cursor:pointer; }
+.journal-form{ border:1px solid var(--line); background:var(--paper-card); border-radius:6px; padding:12px; margin-bottom:18px; }
+.journal-form .row{ display:flex; gap:8px; margin-bottom:8px; }
+.journal-form input[type=date]{ border:1px solid var(--line); border-radius:4px; padding:6px 8px; font-size:.85rem; font-family:inherit; background:var(--paper-card); }
+.journal-form select{ flex:1; border:1px solid var(--line); border-radius:4px; padding:6px 8px; font-size:.85rem; font-family:inherit; background:var(--paper-card); }
+.journal-form textarea{
+  width:100%; border:1px solid var(--line); border-radius:4px; padding:8px;
+  font-size:.9rem; font-family:inherit; resize:none; background:var(--paper-card);
+}
+.journal-form .submit-row{ display:flex; justify-content:flex-end; margin-top:8px; }
+.journal-form button.submit{
+  background:var(--ink); color:var(--paper); border:none; border-radius:4px;
+  padding:8px 16px; font-size:.85rem; font-family:inherit; cursor:pointer;
+  display:flex; align-items:center; gap:6px;
+}
+.journal-entry{ border-left:3px solid var(--ink); background:var(--paper-card); padding:8px 10px; border-radius:2px; margin-bottom:10px; }
+.journal-entry .top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.journal-entry .date{ font-size:.75rem; font-weight:700; color:var(--ink); }
+.journal-entry .del{ background:none; border:none; cursor:pointer; color:var(--muted); }
+.journal-entry .ref{ font-size:.72rem; color:var(--muted); margin-bottom:4px; }
+.journal-entry .text{ font-size:.9rem; white-space:pre-wrap; margin:0; color:var(--ink-dark); }
+.journal-empty{ text-align:center; padding:40px 0; color:var(--muted); font-size:.9rem; }
+.install-banner{
+  position:fixed; left:0; right:0; bottom:0; background:var(--ink); color:var(--paper);
+  padding:10px 16px; font-size:.8rem; display:flex; justify-content:space-between; align-items:center;
+  gap:10px; z-index:50;
+}
+.install-banner button{ background:var(--paper); color:var(--ink); border:none; border-radius:4px; padding:6px 12px; font-size:.78rem; font-family:inherit; cursor:pointer; flex-shrink:0; }
+.install-banner .close{ background:none; color:var(--paper); font-size:1rem; padding:0 4px; }
 </style>
 </head>
 <body>
-<div class="app">
+<div id="app"></div>
 
-  <header class="top">
-    <div class="kicker">🌻 NATSUYASUMI TANKEN NOTE 🌻</div>
-    <h1>あいせいの<br>なつやすみ たんけんノート</h1>
-    <div class="shared-note">👨‍👩‍👧 パパ・ママ・あいせい で きろくを きょうゆう ちゅう</div>
-    <div><span class="sync-badge busy" id="syncBadge">🔄 せつぞくちゅう...</span></div>
-  </header>
-
-  <div class="init-loading" id="initLoading">⏳ きろくを よみこんでいます...</div>
-
-  <div class="load-warning hidden" id="loadWarningBanner">
-    ⚠️ きろくの よみこみに じかんが かかっています。でんぱの よい ばしょで、すこし まってみてね。<br>
-    <button id="retryLoadBtn">🔄 もういちど よみこむ</button>
-  </div>
-
-  <div id="mainContent" class="hidden">
-  <div class="backup-reminder hidden" id="backupReminder"></div>
-  <div class="date-switch-row">
-    <button id="prevDayBtn" class="ds-btn" aria-label="前の日">◀</button>
-    <div class="ds-center">
-      <input type="date" id="activeDateInput">
-      <div class="today-date" id="todayDateLabel">-</div>
-    </div>
-    <button id="nextDayBtn" class="ds-btn" aria-label="次の日">▶</button>
-  </div>
-  <button id="jumpTodayBtn" class="jump-today-btn hidden">📍 きょうに もどる</button>
-
-  <!-- ============ TODAY VIEW ============ -->
-  <div id="view-today">
-
-    <div class="grid-row-pair">
-      <div class="card">
-        <div class="section-title">🙏 なんみょう ごきねん きろく <span class="badge" id="nanmyouBadge">0/100</span></div>
-
-        <div class="field-label">① なにを いのったか かいてね(いくつでも かいて いいよ)</div>
-        <textarea id="nanmyouText" placeholder="れい:あさがおが たくさん さきますように"></textarea>
-        <button class="save-btn" id="nanmyouSaveBtn">ごきねんを とうろくする</button>
-        <div class="milestone-note" id="nanmyouMilestone"></div>
-        <div class="book-list scroll-list" id="nanmyouList"></div>
-
-        <div class="field-label" style="margin-top:16px;">② なんぷん おいのり した?(こちらは べつに とうろくできます)</div>
-        <div class="counter-add-row">
-          <input type="number" id="nanmyouMinutesInput" min="0" placeholder="れい:5" class="add-amount">
-          <button class="save-btn counter-record-btn" id="nanmyouMinutesSaveBtn">ふんすうを とうろくする</button>
-        </div>
-        <div class="milestone-note" id="nanmyouMinutesTotal"></div>
-        <div class="book-list scroll-list" id="nanmyouMinutesList"></div>
-      </div>
-
-      <div class="card">
-        <div class="section-title">🙏 ごんぎょう れんしゅう <span class="badge" id="gongyoBadge">0/12</span></div>
-        <div class="field-label">よめるように なった ページに タップ!</div>
-        <div class="chip-grid" id="gongyoGrid" style="grid-template-columns:repeat(4,1fr);"></div>
-        <div class="milestone-note" id="gongyoMilestone"></div>
-      </div>
-    </div>
-
-    <div class="grid-row-pair">
-      <div class="card">
-        <div class="section-title">🌱 がんばり チャレンジ</div>
-        <div id="counterList"></div>
-      </div>
-
-      <div class="card">
-        <div class="section-title">🎬 えいごの えいが きろく</div>
-        <input type="text" id="eigoInput" placeholder="きょう みた えいがの タイトル">
-        <button class="save-btn" id="eigoSaveBtn">きろくする</button>
-        <div class="book-list scroll-list" id="eigoList"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">📖 よんだ ほんの きろく</div>
-      <input type="text" id="bookInput" placeholder="ほんの なまえを かいてね">
-      <button class="save-btn" id="bookSaveBtn">きろくする</button>
-      <div class="book-list" id="bookList"></div>
-    </div>
-
-    <div class="grid-row-pair stack-right">
-      <div class="card">
-        <div class="progress-summary">
-          <div class="ring">
-            <svg width="62" height="62" viewBox="0 0 62 62">
-              <circle cx="31" cy="31" r="26" stroke="#EFE4D2" stroke-width="8" fill="none"/>
-              <circle id="todayRingFg" cx="31" cy="31" r="26" stroke="#E14B3E" stroke-width="8" fill="none"
-                stroke-linecap="round" stroke-dasharray="163.4" stroke-dashoffset="163.4"/>
-            </svg>
-            <div class="ring-label" id="todayRingLabel">0/13</div>
-          </div>
-          <div class="msg">きょうの スタンプ、<br>あと <b id="todayRemainCount">-</b> こ おせば ぜんぶ たまるよ!</div>
-        </div>
-
-        <div id="habitGroups"></div>
-      </div>
-
-      <div class="card">
-        <div class="section-title">✏️ その他の おてつだい</div>
-        <div class="field-label">きょう やった、ほかの おてつだいが あれば じゆうに かいてね</div>
-        <input type="text" id="otherHelpInput" placeholder="れい:おさらあらい">
-        <button class="save-btn" id="otherHelpSaveBtn">きろくする</button>
-        <div class="book-list scroll-list" id="otherHelpList"></div>
-      </div>
-
-      <div class="card">
-        <div class="section-title">💪 きんとれ きろく</div>
-        <div class="kintore-grid">
-          <div class="kintore-field">
-            <label for="kintoreSquat">スクワット</label>
-            <div class="kintore-input-row"><input type="number" id="kintoreSquat" min="0" placeholder="0"><span>かい</span></div>
-          </div>
-          <div class="kintore-field">
-            <label for="kintoreSitup">ふっきん</label>
-            <div class="kintore-input-row"><input type="number" id="kintoreSitup" min="0" placeholder="0"><span>かい</span></div>
-          </div>
-          <div class="kintore-field">
-            <label for="kintoreHandstand">さかだち</label>
-            <div class="kintore-input-row"><input type="number" id="kintoreHandstand" min="0" placeholder="0"><span>ふん</span></div>
-          </div>
-        </div>
-        <button class="save-btn" id="kintoreSaveBtn">きんとれを きろくする</button>
-        <div class="milestone-note" id="kintoreSavedNote"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">📔 きょうの にっき</div>
-      <div class="field-label">おてんき</div>
-      <div class="weather-row" id="weatherRow"></div>
-      <div class="field-label">きょう やったこと・あったこと(ひとこと)</div>
-      <textarea id="diaryText" placeholder="れい:かぶとむしが 3びき とれた!"></textarea>
-      <button class="save-btn" id="diarySaveBtn">にっきを ほぞんする</button>
-    </div>
-
-  </div>
-
-  <!-- ============ HOMEWORK VIEW ============ -->
-  <div id="view-homework" class="hidden">
-    <div class="hw-date-note" id="hwDateNote"></div>
-    <div class="card">
-      <div class="section-title">🌳 なつスキル・ドリル<span class="badge">カブトムシが木のぼり</span></div>
-      <div id="hwList"></div>
-    </div>
-    <div class="card">
-      <div class="section-title">✅ いちど やれば おわり</div>
-      <div id="onetimeList"></div>
-    </div>
-  </div>
-
-  <!-- ============ CALENDAR VIEW ============ -->
-  <div id="view-calendar" class="hidden">
-    <div class="card">
-      <div class="section-title">🗓️ なつやすみ カレンダー <span class="badge">7/18〜8/31</span></div>
-      <div class="hw-date-note">📌 ひづけを タップすると、その日の きろくを つけたり 見たり できるよ</div>
-      <div id="calendarMonths"></div>
-    </div>
-
-    <div class="card">
-      <div class="section-title">💾 バックアップ</div>
-      <div class="field-label" id="lastBackupLabel">もしもの時のために、きろくを ファイルに ほぞんできます</div>
-      <button class="save-btn" id="backupDownloadBtn">📥 バックアップを ダウンロード</button>
-
-      <div class="field-label" style="margin-top:16px;">バックアップファイルから もどす</div>
-      <input type="file" id="backupRestoreInput" accept="application/json">
-      <div id="restoreConfirmArea" class="hidden" style="margin-top:10px;">
-        <div class="milestone-note" style="color:var(--watermelon);">⚠️ いまの きろくが うわがき されます。よろしいですか?</div>
-        <button class="save-btn" id="restoreConfirmBtn" style="background:var(--watermelon);box-shadow:0 4px 0 #c14a41;margin-top:8px;">はい、もどす</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ GRAPH / TABLE VIEW ============ -->
-  <div id="view-graph" class="hidden">
-    <div class="card">
-      <div class="section-title">📊 がんばり ひょう</div>
-      <div class="hw-date-note">🌸=できた ひ、すうじ=すすんだ りょう だよ</div>
-      <div id="graphTableWrap"></div>
-    </div>
-  </div>
-
-  <!-- ============ REPORT VIEW ============ -->
-  <div id="view-report" class="hidden">
-    <div class="card">
-      <div class="streak-banner">
-        <div class="n" id="streakNum">0</div>
-        <div class="t">にちれんぞく<br>スタンプ できてるよ!</div>
-      </div>
-      <div class="report-hero">
-        <div class="big-emoji">🎉</div>
-        <h2>きょう、これだけ できたよ!</h2>
-        <div class="sub" id="reportDateLabel">-</div>
-      </div>
-      <ul class="report-list" id="reportList"></ul>
-      <div id="reportEmpty" class="report-empty hidden">まだ なにも やってないよ。<br>「きょう」タブから はじめよう!</div>
-      <div id="reportDiaryQuote"></div>
-    </div>
-  </div>
-  </div>
-
-</div>
-
-<nav class="tabs hidden" id="navTabs">
-  <button data-tab="today" class="active"><span class="ico">☀️</span>きょう</button>
-  <button data-tab="homework"><span class="ico">🌳</span>しゅくだい</button>
-  <button data-tab="calendar"><span class="ico">🗓️</span>カレンダー</button>
-  <button data-tab="graph"><span class="ico">📊</span>ひょう</button>
-  <button data-tab="report"><span class="ico">🎉</span>ほうこく</button>
-</nav>
-
+<!-- Firebase（夫婦での共有・リアルタイム同期用） -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-(function(){
-
-// ---------- FIREBASE 設定 ----------
-// dokuryo-cho プロジェクトと同じ Firebase を共用し、コレクションだけ分けて使う。
+/* ---------------- Firebase 初期化 ---------------- */
 const firebaseConfig = {
   apiKey: "AIzaSyD1sbGfrdUw6HoKlWNWl099-JMzlwfRMLs",
   authDomain: "dokuryo-cho.firebaseapp.com",
@@ -1001,1152 +143,401 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-try{ db.enablePersistence({synchronizeTabs:true}).catch(()=>{}); }catch(e){}
-const docRef = db.collection('natsu2026-aisei').doc('shared');
+try{ db.enablePersistence({ synchronizeTabs:true }); }catch(e){}
+const sharedDocRef = db.collection("dokuryo-cho").doc("shared");
 
-// ---------- DATA DEFINITIONS ----------
-const GROUPS = [
-  {id:'karada', name:'からだ', color:'#4E9E63', bg:'#E9F5EA'},
-  {id:'otetsudai', name:'おてつだい', color:'#E4A020', bg:'#FCF1DA'},
-  {id:'kokoro', name:'こころ・しゅうかん', color:'#F0645A', bg:'#FDEAE8'},
-];
-
-const HABITS = [
-  {id:'radio', name:'らじおたいそう', emoji:'📻', group:'karada'},
-  {id:'soccer', name:'さっかーれんしゅう', emoji:'⚽', group:'karada'},
-  {id:'soto', name:'そとにいく', emoji:'☀️', group:'karada'},
-
-  {id:'sentaku', name:'せんたくものたたみ', emoji:'👕', group:'otetsudai'},
-  {id:'osouji', name:'おふろそうじ', emoji:'🛁', group:'otetsudai'},
-  {id:'oheya', name:'おへやの おかたづけ', emoji:'🧸', group:'otetsudai'},
-  {id:'futon_shiku', name:'ふとんを しく', emoji:'🛏️', group:'otetsudai'},
-  {id:'futon_tatamu', name:'ふとんを たたむ', emoji:'🛏️', group:'otetsudai'},
-  {id:'okaimono', name:'おかいもの', emoji:'🛒', group:'otetsudai'},
-
-  {id:'hamigaki_asa', name:'あさ はみがき', emoji:'🪥', group:'kokoro'},
-  {id:'hamigaki_yoru', name:'よる はみがき', emoji:'🪥', group:'kokoro'},
-  {id:'ichigyounikki', name:'なつの いちぎょうにっき', emoji:'✍️', group:'kokoro'},
-];
-
-const COUNTERS = [
-  {id:'tango', name:'ミッキー えいごカード', unit:'まい', emoji:'🃏'},
-  {id:'piano', name:'ピアノ れんしゅう', unit:'ページ', emoji:'🎹'},
-];
-
-const GONGYO_PAGES = [];
-for(let p=3;p<=14;p++) GONGYO_PAGES.push(p);
-
-const HOMEWORK = [
-  {id:'kokugo', name:'なつスキル こくご', total:11, emoji:'📕'},
-  {id:'sansu', name:'なつスキル さんすう', total:11, emoji:'📗'},
-  {id:'hiragana', name:'ならった ひらがな', total:3, emoji:'🈶'},
-  {id:'sansu2', name:'ならった さんすう', total:3, emoji:'🔢'},
-  {id:'katakana', name:'たのしくおぼえる かたかな', total:7, emoji:'🈸'},
-  {id:'kakunin_sansu', name:'かくにんテスト さんすう', total:1, emoji:'📐'},
-  {id:'kakunin_kokugo', name:'かくにんテスト こくご', total:1, emoji:'📝'},
-];
-
-const ONETIME = [
-  {id:'asagao', name:'あさがおの かんさつ(A4 1まい)', emoji:'🌼'},
-  {id:'enikki1', name:'えにっき①', emoji:'🎨'},
-  {id:'enikki2', name:'えにっき②', emoji:'🎨'},
-  {id:'tegami', name:'てがみの かきかた', emoji:'✉️'},
-];
-
-const WEATHERS = ['☀️','🌤️','⛅','🌧️','⛈️'];
-
-const START_DATE = new Date(2026,6,18); // July 18, 2026
-const END_DATE = new Date(2026,7,31);   // Aug 31, 2026
-
-// ---------- 初期データ(これまでの きろく を そのまま ひきつぐ) ----------
-// Firestoreに まだ なにも 保存されていない、いちばん最初の1回だけ使われる。
-const SEED_STATE = {
-  "habitsByDate": {"2026-07-22":{"sentaku":true,"osouji":true,"soccer":true,"soto":true,"radio":true,"hamigaki":true},"2026-07-23":{"ichigyounikki":true,"soto":true,"hamigaki":true,"soccer":true,"sentaku":true,"ehon":true,"futon_shiku":true},"2026-07-24":{"sentaku":true,"soccer":true,"radio":true,"soto":true,"osouji":true,"hamigaki":true,"ichigyounikki":true},"2026-07-25":{"soccer":true,"osouji":true,"futon_tatamu":true,"soto":true,"sentaku":true,"oheya":true,"hamigaki":true},"2026-07-27":{"futon_tatamu":true,"hamigaki":true,"soccer":true,"soto":true,"futon_shiku":true},"2026-07-26":{"osouji":true,"sentaku":true,"futon_tatamu":true,"hamigaki":true,"futon_shiku":true},"2026-07-28":{"soccer":true,"soto":true,"sentaku":true,"futon_tatamu":true,"hamigaki":true,"ichigyounikki":true},"2026-07-29":{"futon_tatamu":true,"soccer":true}},
-  "homeworkProgress": {"kokugo":11,"sansu":11,"sansu2":3,"hiragana":3},
-  "homeworkByDate": {"2026-07-18":{"kokugo":10,"sansu":11},"2026-07-23":{"kokugo":1,"sansu2":3,"hiragana":0,"sansu":11},"2026-07-29":{"hiragana":3}},
-  "oneTimeDone": {},
-  "diaryByDate": {"2026-07-24":{"weather":"","text":"やえちゃんとイオンで遊ぶ。サッカー教室"},"2026-07-25":{"weather":"☀️","text":"音楽鑑賞、クワガタ産卵木いれた、ひでたかと食事"},"2026-07-27":{"weather":"","text":"ひろちゃん、せりなとお寿司、お野菜鍋をたべた"},"2026-07-26":{"weather":"","text":"２５期生の同窓会、決勝を鑑賞、立川に行って宮原先生の蜂蜜購入夜はMER"},"2026-07-28":{"weather":"🌤️","text":"りりちゃんとりおちゃんが遊びに来てくれてラーメン食べて一緒に遊んだ"},"2026-07-29":{"weather":"☀️","text":""}},
-  "books": [],
-  "counterProgress": {"tango":86,"piano":18},
-  "counterTarget": {"tango":10,"piano":1},
-  "counterByDate": {"2026-07-22":{"piano":4,"tango":20},"2026-07-23":{"piano":6,"tango":10},"2026-07-24":{"tango":20,"piano":7},"2026-07-27":{"tango":16},"2026-07-28":{"tango":10}},
-  "eigoLog": [{"date":"2026-07-22","title":"ひーろーだいさくせん"},{"date":"2026-07-22","title":"ミッキーふれんず"},{"date":"2026-07-22","title":"きゃんでぃすきゅうしゅつだいさくせん"},{"date":"2026-07-23","title":"るか"},{"date":"2026-07-25","title":"アイスエイジ"},{"date":"2026-07-27","title":"ライオンキング"},{"date":"2026-07-27","title":"ビジョとヤジュウ"},{"date":"2026-07-26","title":"アラジン"}],
-  "nanmyouLog": [{"date":"2026-07-22","text":"おきにいりのえいごえいがをなつやすみみる"},{"date":"2026-07-27","text":"きょうもあいさつげんきにします"},{"date":"2026-07-28","text":"みんなでたのしくあそべますように"}],
-  "nanmyouTarget": 100,
-  "nanmyouMinutesLog": [{"date":"2026-07-22","minutes":1},{"date":"2026-07-21","minutes":1},{"date":"2026-07-27","minutes":2},{"date":"2026-07-28","minutes":2}],
-  "gongyoPages": {"3":"2026-07-23","4":"2026-07-23","5":"2026-07-27","6":"2026-07-27","7":"2026-07-27","8":"2026-07-27","9":"2026-07-27","10":"2026-07-28","11":"2026-07-28","12":"2026-07-28","13":"2026-07-28","14":"2026-07-28"},
-  "kintoreByDate": {},
-  "otherHelpLog": [{"date":"2026-07-22","text":"おかいもの"},{"date":"2026-07-24","text":"おふろそうじ"},{"date":"2026-07-25","text":"オサラをくばりました"}],
-  "lastBackupAt": null
+/* ---------------- 初期データ（画像の読了表より） ---------------- */
+/* 表示順：新・人間革命 → 人間革命 */
+const INITIAL_DATA = {
+  "新・人間革命": [
+    { vol:1, chapters:["はじめに","旭日","新世界","錦秋","慈光","開拓者","あとがき"] },
+    { vol:2, chapters:["先駆","錬磨","勇舞","民衆の旗"] },
+    { vol:3, chapters:["仏法西還","月氏","仏陀","平和の光"] },
+    { vol:4, chapters:["春嵐","凱旋","青葉","立正安国","大光"] },
+    { vol:5, chapters:["開道","歓喜","勝利","獅子"] },
+    { vol:6, chapters:["宝土","遠路","加速","波浪","若鷲"] },
+    { vol:7, chapters:["文化の華","萌芽","早春","操舵"] },
+    { vol:8, chapters:["布陣","宝剣","清流","激流"] },
+    { vol:9, chapters:["新時代","鳳雛","光彩","衆望"] },
+    { vol:10, chapters:["言論城","幸風","新航路","桂冠"] },
+    { vol:11, chapters:["暁光","開墾","常勝","躍進"] },
+    { vol:12, chapters:["新緑","愛郷","天舞","栄光"] },
+    { vol:13, chapters:["金の橋","北斗","光城","楽土"] },
+    { vol:14, chapters:["智勇","使命","烈風","大河"] },
+    { vol:15, chapters:["蘇生","創価大学","開花"] },
+    { vol:16, chapters:["入魂","対話","羽ばたき"] },
+    { vol:17, chapters:["本陣","希望","民衆城","緑野"] },
+    { vol:18, chapters:["師子吼","師恩","前進","飛躍"] },
+    { vol:19, chapters:["虹の舞","凱歌","陽光","宝塔"] },
+    { vol:20, chapters:["友誼の道","懸け橋","信義の絆"] },
+    { vol:21, chapters:["SGI","人間外交","共鳴音","宝冠"] },
+    { vol:22, chapters:["新世紀","潮流","波濤","命宝"] },
+    { vol:23, chapters:["未来","学光","勇気","敢闘"] },
+    { vol:24, chapters:["母の詩","厳護","人間教育","灯台"] },
+    { vol:25, chapters:["福光","共戦","薫風","人材城"] },
+    { vol:26, chapters:["厚田","法旗","勇将","奮迅"] },
+    { vol:27, chapters:["若芽","正義","激闘","求道"] },
+    { vol:28, chapters:["広宣譜","大道","革心","勝利島"] },
+    { vol:29, chapters:["常楽","力走","清新","源流"] },
+    { vol:30, label:"第30巻(上)", chapters:["大山","雌伏","雄飛","暁鐘(前半)"] },
+    { vol:30.5, label:"第30巻(下)", chapters:["暁鐘(後半)","勝ち鬨","誓願"] },
+  ],
+  "人間革命": [
+    { vol:1, chapters:["はじめに","黎明","再建","終戦前後","占領","一人立つ","千里の道","胎動","歯車"] },
+    { vol:2, chapters:["幾山河","序曲","光と影","前哨戦","地涌","車軸"] },
+    { vol:3, chapters:["新生","渦中","群像","漣","結実","宣告","道程"] },
+    { vol:4, chapters:["生命の庭","時流","波紋","疾風","怒濤","秋霜"] },
+    { vol:5, chapters:["烈日","随喜","戦争と講和","前三後一","驀進","布石"] },
+    { vol:6, chapters:["七百年祭","推移","余燼","離陸"] },
+    { vol:7, chapters:["飛翔","原点","翼の下","水滸の誓","匆匆の間"] },
+    { vol:8, chapters:["真実","推進","学徒","明暗","多事"] },
+    { vol:9, chapters:["発端","小樽問答","展開","上げ潮","実証"] },
+    { vol:10, chapters:["一念","脈動","跳躍","険路","展望"] },
+    { vol:11, chapters:["転機","波瀾","夕張","大阪","裁判"] },
+    { vol:12, chapters:["涼風","宣言","憂愁","後継","寂光","新・黎明","あとがき"] },
+  ],
 };
 
-// ---------- STATE ----------
-let state = JSON.parse(JSON.stringify(SEED_STATE));
-let dataLoaded = false;
-let activeDate = todayStr();
-let suppressNextSnapshotRender = false; // 自分の書き込み直後の二重描画を避ける
+const BOOKS = Object.keys(INITIAL_DATA);
+const STORAGE_KEY = "ningen-kakumei-tracker-pwa-v1"; // クラウドの内容のオフラインキャッシュ
+const UI_KEY = "ningen-kakumei-ui-v1"; // 巻の開閉状態（端末ごと・同期しない）
 
-function clampToRange(dstr){
-  const startS = fmtDate(START_DATE), endS = fmtDate(END_DATE);
-  if(dstr < startS) return startS;
-  if(dstr > endS) return endS;
-  return dstr;
+/* ---------------- 状態管理（Firestoreで夫婦間に同期／localStorageはオフライン用の控え） ---------------- */
+function loadCachedSharedState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){ console.error(e); }
+  return { completion:{}, journal:[], customChapters:{} };
 }
-function setActiveDate(dstr){
-  activeDate = clampToRange(dstr);
-  renderDateControls();
-  refreshTodayAndReport();
+function loadUiState(){
+  try{
+    const raw = localStorage.getItem(UI_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){ console.error(e); }
+  return { openVols:{} };
 }
-function renderDateControls(){
-  document.getElementById('activeDateInput').value = activeDate;
-  const isToday = activeDate===todayStr();
-  document.getElementById('todayDateLabel').textContent = labelDate(activeDate) + (isToday ? ' の きろく' : ' の きろく(さかのぼり きにゅう)');
-  document.getElementById('jumpTodayBtn').classList.toggle('hidden', isToday);
+function cacheSharedStateLocally(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      completion: state.completion, journal: state.journal, customChapters: state.customChapters,
+    }));
+  }catch(e){ console.error("キャッシュ保存失敗", e); }
 }
-function refreshTodayAndReport(){
-  initTodayView();
-  const activeTab = document.querySelector('nav.tabs button.active');
-  if(activeTab && activeTab.dataset.tab==='report') renderReport();
-}
-
-function fmtDate(d){
-  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-function todayStr(){ return fmtDate(new Date()); }
-function labelDate(dateStr){
-  const [y,m,d]=dateStr.split('-').map(Number);
-  const dow = ['にち','げつ','か','すい','もく','きん','ど'][new Date(y,m-1,d).getDay()];
-  return `${m}がつ ${d}にち (${dow})`;
+function saveUiState(){
+  try{ localStorage.setItem(UI_KEY, JSON.stringify(uiState)); }
+  catch(e){ console.error("保存失敗", e); }
 }
 
-// ---------- 同期ステータス表示 ----------
-function setSyncBadge(kind, text){
-  const el = document.getElementById('syncBadge');
-  el.className = 'sync-badge ' + kind;
-  el.textContent = text;
-}
-window.addEventListener('online', ()=> setSyncBadge('ok', '☁️ どうき ずみ'));
-window.addEventListener('offline', ()=> setSyncBadge('off', '📡 オフライン(きろくは あとで どうき されるよ)'));
+// state = 夫婦で共有・同期される内容／uiState = この端末だけのUI状態（巻の開閉）
+let state = loadCachedSharedState();
+let uiState = loadUiState();
+let tab = BOOKS[0];
+let syncStatus = "connecting"; // connecting | synced | offline
+let isApplyingRemote = false; // Firestoreから来た更新を反映中は書き込みしない（無限ループ防止）
 
-// ---------- FIRESTORE 読み込み・リアルタイム同期 ----------
-function subscribeToState(){
-  docRef.onSnapshot((snap)=>{
-    if(snap.exists){
-      if(!suppressNextSnapshotRender){
-        state = Object.assign(JSON.parse(JSON.stringify(SEED_STATE)), snap.data());
-      }
-      suppressNextSnapshotRender = false;
-      dataLoaded = true;
-      hideLoadWarning();
-      finishInitialLoadIfNeeded();
-      refreshAllViews();
-      if(navigator.onLine) setSyncBadge('ok', '☁️ どうき ずみ');
+function pushStateToCloud(){
+  if(isApplyingRemote) return;
+  cacheSharedStateLocally();
+  sharedDocRef.set({
+    completion: state.completion,
+    journal: state.journal,
+    customChapters: state.customChapters,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }).catch(err=>{ console.error("同期エラー", err); });
+}
+
+sharedDocRef.onSnapshot((doc)=>{
+  if(doc.exists){
+    const data = doc.data();
+    isApplyingRemote = true;
+    state = {
+      completion: data.completion || {},
+      journal: data.journal || [],
+      customChapters: data.customChapters || {},
+    };
+    cacheSharedStateLocally();
+    isApplyingRemote = false;
+  } else {
+    // まだクラウドにデータがない場合、今の内容（ローカルの控え）で初期化する
+    pushStateToCloud();
+  }
+  syncStatus = doc.metadata.fromCache ? "offline" : "synced";
+  render();
+}, (err)=>{
+  console.error("同期の受信エラー", err);
+  syncStatus = "offline";
+  render();
+});
+
+function todayStr(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,"0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+function chapterKey(book, vol, idx){ return `${book}::${vol}::${idx}`; }
+function dataOf(book){
+  const base = INITIAL_DATA[book];
+  const custom = state.customChapters[book] || [];
+  return [...base, ...custom].sort((a,b)=>a.vol-b.vol);
+}
+function progressOfVol(book, vol, chapters){
+  let done=0;
+  chapters.forEach((_,idx)=>{ if(state.completion[chapterKey(book,vol,idx)]?.done) done++; });
+  return { done, total:chapters.length };
+}
+function progressOfBook(book){
+  let done=0, total=0;
+  dataOf(book).forEach(v=>{
+    v.chapters.forEach((_,idx)=>{
+      total++;
+      if(state.completion[chapterKey(book,v.vol,idx)]?.done) done++;
+    });
+  });
+  return { done, total };
+}
+
+const CHECK_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f7f2e7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+const CHEVRON_DOWN = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7a3b34" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+const CHEVRON_RIGHT = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7a3b34" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+const TRASH_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8c7d64" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>`;
+
+let addingVolFor = null;
+let journalDraft = { date: todayStr(), text: "", ref: "" };
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ---------------- 描画 ---------------- */
+function render(){
+  const app = document.getElementById("app");
+  const allTabs = [...BOOKS, "日々の感想"];
+
+  let html = `
+    <header>
+      <div class="row">
+        <h1>読了帳</h1>
+        <span class="status">${syncStatus==='synced' ? '☁️ 同期済み' : syncStatus==='offline' ? '📡 オフライン(復帰後に同期)' : '🔄 接続中…'}</span>
+      </div>
+      <p>人間革命・新人間革命の読了記録と、日々の感想を残す帳面</p>
+    </header>
+    <nav class="tabs">
+      ${allTabs.map(t => `<button data-tab="${esc(t)}" class="${t===tab?'active':''}">${esc(t)}</button>`).join("")}
+    </nav>
+    <div class="tabs-divider"></div>
+    <main>`;
+
+  if(tab !== "日々の感想"){
+    const { done, total } = progressOfBook(tab);
+    const pct = total ? Math.round(done/total*100) : 0;
+    html += `
+      <div class="progress-wrap">
+        <div class="progress-label"><span>読了 ${done} / ${total} 章</span><span>${pct}%</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      </div>`;
+
+    dataOf(tab).forEach(v => {
+      const { done, total } = progressOfVol(tab, v.vol, v.chapters);
+      const volKey = `${tab}::${v.vol}`;
+      const opened = !!uiState.openVols[volKey];
+      const volLabel = v.label ? esc(v.label) : `第${v.vol}巻`;
+      html += `
+        <div class="vol-card">
+          <button class="vol-head" data-volkey="${esc(volKey)}">
+            <span class="left">${opened?CHEVRON_DOWN:CHEVRON_RIGHT}${volLabel}</span>
+            <span class="count">${done}/${total}</span>
+          </button>
+          <div class="vol-body ${opened?'open':''}">
+            ${v.chapters.map((c, idx) => {
+              const key = chapterKey(tab, v.vol, idx);
+              const isDone = !!state.completion[key]?.done;
+              const dateStr = state.completion[key]?.date || "";
+              return `
+                <div class="chapter-row">
+                  <button class="chk ${isDone?'done':''}" data-chapterkey="${esc(key)}">${CHECK_SVG}</button>
+                  <span class="chapter-title ${isDone?'done':''}">${esc(c)}</span>
+                  ${isDone && dateStr ? `<span class="chapter-date">${esc(dateStr)}</span>` : ""}
+                </div>`;
+            }).join("")}
+          </div>
+        </div>`;
+    });
+
+    if(addingVolFor === tab){
+      html += `
+        <div class="add-vol-form">
+          <div class="row">
+            <input class="num" type="number" id="newVolNum" placeholder="巻番号" />
+            <input class="chs" type="text" id="newVolChapters" placeholder="章名（読点区切り：例 旭日、新世界、錦秋）" />
+          </div>
+          <div class="actions">
+            <button class="btn-ghost" id="cancelAddVol">キャンセル</button>
+            <button class="btn-ink" id="confirmAddVol">追加する</button>
+          </div>
+        </div>`;
     } else {
-      // まだドキュメントが存在しない → これまでのバックアップ内容を初期データとして書き込む
-      docRef.set(state).then(()=>{
-        dataLoaded = true;
-        hideLoadWarning();
-        finishInitialLoadIfNeeded();
-        refreshAllViews();
-        setSyncBadge('ok', '☁️ どうき ずみ');
-      }).catch((e)=>{
-        console.error('initial seed write failed', e);
-        showLoadWarning();
+      html += `<button class="add-vol-btn" id="openAddVol">＋ 巻を追加する</button>`;
+    }
+
+  } else {
+    // 日々の感想
+    const options = [];
+    BOOKS.forEach(book => {
+      dataOf(book).forEach(v => {
+        const volLabel = v.label ? v.label : `第${v.vol}巻`;
+        v.chapters.forEach(c => options.push(`${book} ${volLabel}「${c}」`));
+      });
+    });
+
+    html += `
+      <div class="journal-form">
+        <div class="row">
+          <input type="date" id="journalDate" value="${esc(journalDraft.date)}" />
+          <select id="journalRef">
+            <option value="">（章を紐づけない）</option>
+            ${options.map(o => `<option value="${esc(o)}" ${journalDraft.ref===o?'selected':''}>${esc(o)}</option>`).join("")}
+          </select>
+        </div>
+        <textarea id="journalText" rows="4" placeholder="今日読んで感じたこと、心に残った一節など">${esc(journalDraft.text)}</textarea>
+        <div class="submit-row">
+          <button class="submit" id="addJournal">記す</button>
+        </div>
+      </div>`;
+
+    if(state.journal.length === 0){
+      html += `<p class="journal-empty">まだ感想がありません。読んだ日の思いを書き留めてみましょう。</p>`;
+    } else {
+      state.journal.forEach(e => {
+        html += `
+          <div class="journal-entry">
+            <div class="top">
+              <span class="date">${esc(e.date)}</span>
+              <button class="del" data-delid="${esc(e.id)}">${TRASH_SVG}</button>
+            </div>
+            ${e.ref ? `<div class="ref">${esc(e.ref)}</div>` : ""}
+            <p class="text">${esc(e.text)}</p>
+          </div>`;
       });
     }
-  }, (err)=>{
-    console.error('onSnapshot error', err);
-    setSyncBadge('off', '📡 せつぞく できません');
-    if(!dataLoaded) showLoadWarning();
+  }
+
+  html += `</main>`;
+  app.innerHTML = html;
+  bindEvents();
+}
+
+/* ---------------- イベント ---------------- */
+function bindEvents(){
+  document.querySelectorAll("nav.tabs button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{ tab = btn.dataset.tab; addingVolFor=null; render(); });
+  });
+
+  document.querySelectorAll(".vol-head").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const k = btn.dataset.volkey;
+      uiState.openVols[k] = !uiState.openVols[k];
+      saveUiState();
+      render();
+    });
+  });
+
+  document.querySelectorAll(".chk").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const key = btn.dataset.chapterkey;
+      if(state.completion[key]?.done){ delete state.completion[key]; }
+      else { state.completion[key] = { done:true, date: todayStr() }; }
+      pushStateToCloud();
+      render();
+    });
+  });
+
+  const openAddVol = document.getElementById("openAddVol");
+  if(openAddVol) openAddVol.addEventListener("click", ()=>{ addingVolFor = tab; render(); });
+
+  const cancelAddVol = document.getElementById("cancelAddVol");
+  if(cancelAddVol) cancelAddVol.addEventListener("click", ()=>{ addingVolFor = null; render(); });
+
+  const confirmAddVol = document.getElementById("confirmAddVol");
+  if(confirmAddVol) confirmAddVol.addEventListener("click", ()=>{
+    const num = parseInt(document.getElementById("newVolNum").value, 10);
+    const chaptersRaw = document.getElementById("newVolChapters").value;
+    const chapters = chaptersRaw.split(/[、,\n]/).map(s=>s.trim()).filter(Boolean);
+    if(!num || chapters.length===0) return;
+    if(!state.customChapters[tab]) state.customChapters[tab] = [];
+    state.customChapters[tab].push({ vol:num, chapters });
+    pushStateToCloud();
+    addingVolFor = null;
+    render();
+  });
+
+  const journalDate = document.getElementById("journalDate");
+  if(journalDate) journalDate.addEventListener("change", e=>{ journalDraft.date = e.target.value; });
+
+  const journalRef = document.getElementById("journalRef");
+  if(journalRef) journalRef.addEventListener("change", e=>{ journalDraft.ref = e.target.value; });
+
+  const journalText = document.getElementById("journalText");
+  if(journalText) journalText.addEventListener("input", e=>{ journalDraft.text = e.target.value; });
+
+  const addJournal = document.getElementById("addJournal");
+  if(addJournal) addJournal.addEventListener("click", ()=>{
+    if(!journalDraft.text.trim()) return;
+    const entry = {
+      id: `${Date.now()}`,
+      date: journalDraft.date || todayStr(),
+      text: journalDraft.text.trim(),
+      ref: journalDraft.ref || null,
+    };
+    state.journal.unshift(entry);
+    pushStateToCloud();
+    journalDraft = { date: todayStr(), text:"", ref:"" };
+    render();
+  });
+
+  document.querySelectorAll("[data-delid]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const id = btn.dataset.delid;
+      state.journal = state.journal.filter(e=>e.id!==id);
+      pushStateToCloud();
+      render();
+    });
   });
 }
 
-let saveTimer = null;
-function saveState(){
-  return new Promise((resolve)=>{
-    if(!dataLoaded){
-      showToast('⚠️ まだ きろくを よみこめて いないので、すこし まってから もういちど おしてね');
-      resolve(false);
-      return;
-    }
-    clearTimeout(saveTimer);
-    setSyncBadge('busy', '🔄 ほぞんちゅう...');
-    saveTimer = setTimeout(async ()=>{
-      try{
-        suppressNextSnapshotRender = true;
-        await docRef.set(state);
-        setSyncBadge('ok', '☁️ どうき ずみ');
-        resolve(true);
-      }catch(e){
-        console.error('save failed', e);
-        setSyncBadge('off', '📡 ほぞん できませんでした');
-        showToast('⚠️ ほぞん できなかったよ。でんぱの よい ばしょで もういちど おしてね');
-        resolve(false);
-      }
-    }, 450);
+render();
+
+/* ---------------- Service Worker 登録（オフライン対応） ---------------- */
+if("serviceWorker" in navigator){
+  window.addEventListener("load", ()=>{
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
   });
 }
-// タブを閉じる/切り替える直前は即座に保存する
-window.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState==='hidden' && saveTimer){
-    clearTimeout(saveTimer);
-    docRef.set(state).catch(()=>{});
-  }
+
+/* ---------------- ホーム画面追加バナー（Android/Chrome） ---------------- */
+let deferredPrompt = null;
+window.addEventListener("beforeinstallprompt", (e)=>{
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstallBanner();
 });
-
-function showLoadWarning(){ document.getElementById('loadWarningBanner').classList.remove('hidden'); }
-function hideLoadWarning(){ document.getElementById('loadWarningBanner').classList.add('hidden'); }
-
-function showToast(msg){
-  let el = document.getElementById('appToast');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'appToast';
-    el.className = 'app-toast';
-    document.body.appendChild(el);
-  }
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(el._hideTimer);
-  el._hideTimer = setTimeout(()=>{ el.classList.remove('show'); }, 3200);
-}
-
-function checkBackupReminder(){
-  const el = document.getElementById('backupReminder');
-  const label = document.getElementById('lastBackupLabel');
-  const last = state.lastBackupAt;
-  const days = last ? (Date.now()-last)/86400000 : null;
-  if(!last || days>3){
-    el.classList.remove('hidden');
-    el.textContent = last
-      ? `💾 さいごの バックアップから ${Math.floor(days)}にち たったよ。カレンダータブから ダウンロードしておこう!`
-      : '💾 まだ いちども バックアップして いないよ。カレンダータブから ダウンロードしておこう!';
-  } else {
-    el.classList.add('hidden');
-  }
-  label.textContent = last
-    ? `さいごの バックアップ:${new Date(last).toLocaleString('ja-JP')}`
-    : 'もしもの時のために、きろくを ファイルに ほぞんできます';
-}
-
-let initialLoadDone = false;
-function finishInitialLoadIfNeeded(){
-  if(initialLoadDone) return;
-  initialLoadDone = true;
-  document.getElementById('activeDateInput').min = fmtDate(START_DATE);
-  document.getElementById('activeDateInput').max = fmtDate(END_DATE);
-  renderDateControls();
-  document.getElementById('initLoading').classList.add('hidden');
-  document.getElementById('mainContent').classList.remove('hidden');
-  document.getElementById('navTabs').classList.remove('hidden');
-}
-function refreshAllViews(){
-  initTodayView();
-  const activeTab = document.querySelector('nav.tabs button.active');
-  const tab = activeTab ? activeTab.dataset.tab : 'today';
-  if(tab==='homework') renderHomework();
-  if(tab==='calendar') renderCalendar();
-  if(tab==='graph') renderGraphTab();
-  if(tab==='report') renderReport();
-  checkBackupReminder();
-}
-
-// ---------- TODAY VIEW ----------
-function renderWeatherRow(){
-  const row = document.getElementById('weatherRow');
-  row.innerHTML = '';
-  const d = activeDate;
-  const current = (state.diaryByDate[d]||{}).weather;
-  WEATHERS.forEach(w=>{
-    const btn = document.createElement('button');
-    btn.textContent = w;
-    if(w===current) btn.classList.add('sel');
-    btn.onclick = ()=>{
-      [...row.children].forEach(c=>c.classList.remove('sel'));
-      btn.classList.add('sel');
-      row.dataset.selected = w;
-    };
-    row.appendChild(btn);
+function showInstallBanner(){
+  if(document.getElementById("installBanner")) return;
+  const banner = document.createElement("div");
+  banner.className = "install-banner";
+  banner.id = "installBanner";
+  banner.innerHTML = `
+    <span>ホーム画面に追加して、アプリのように使えます</span>
+    <button id="installBtn">追加する</button>
+    <button class="close" id="closeInstallBtn">×</button>
+  `;
+  document.body.appendChild(banner);
+  document.getElementById("installBtn").addEventListener("click", async ()=>{
+    banner.remove();
+    if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt = null; }
   });
-  row.dataset.selected = current || '';
+  document.getElementById("closeInstallBtn").addEventListener("click", ()=> banner.remove());
 }
-
-function renderHabitGroups(dateStr, container, editable){
-  container.innerHTML = '';
-  const doneMap = state.habitsByDate[dateStr] || {};
-  GROUPS.forEach(g=>{
-    const items = HABITS.filter(h=>h.group===g.id);
-    const wrap = document.createElement('div');
-    wrap.className='group';
-    wrap.innerHTML = `<h3><span class="dot" style="background:${g.color}"></span>${g.name}</h3>`;
-    const grid = document.createElement('div');
-    grid.className='chip-grid';
-    items.forEach(h=>{
-      const done = !!doneMap[h.id];
-      const chip = document.createElement('button');
-      chip.className = 'chip' + (done?' done':'');
-      chip.style.setProperty('--bg-tint', g.bg);
-      chip.style.setProperty('--done-border', g.color);
-      chip.innerHTML = `<span class="emoji">${h.emoji}</span><span class="label">${h.name}</span><span class="stamp">🔴</span>`;
-      if(editable){
-        chip.onclick = async ()=>{
-          if(!state.habitsByDate[dateStr]) state.habitsByDate[dateStr]={};
-          if(state.habitsByDate[dateStr][h.id]){
-            delete state.habitsByDate[dateStr][h.id];
-          } else {
-            state.habitsByDate[dateStr][h.id] = true;
-          }
-          await saveState();
-          renderHabitGroups(dateStr, container, editable);
-          if(dateStr===activeDate) updateTodayRing();
-          renderCalendar();
-        };
-      }
-      grid.appendChild(chip);
-    });
-    wrap.appendChild(grid);
-    container.appendChild(wrap);
-  });
-}
-
-function isKintoreDone(dateStr){
-  const k = state.kintoreByDate[dateStr];
-  return !!(k && ((k.squat||0)>0 || (k.situp||0)>0 || (k.handstand||0)>0));
-}
-
-function updateTodayRing(){
-  const d = activeDate;
-  const doneMap = state.habitsByDate[d] || {};
-  let doneCount = Object.keys(doneMap).length;
-  const total = HABITS.length + 1; // +1 は きんとれの分
-  if(isKintoreDone(d)) doneCount += 1;
-  const pct = doneCount/total;
-  const circ = 163.4;
-  document.getElementById('todayRingFg').setAttribute('stroke-dashoffset', circ*(1-pct));
-  document.getElementById('todayRingLabel').textContent = `${doneCount}/${total}`;
-  document.getElementById('todayRemainCount').textContent = Math.max(total-doneCount,0);
-}
-
-function renderKintore(){
-  const d = activeDate;
-  const k = state.kintoreByDate[d] || {};
-  document.getElementById('kintoreSquat').value = k.squat || '';
-  document.getElementById('kintoreSitup').value = k.situp || '';
-  document.getElementById('kintoreHandstand').value = k.handstand || '';
-  document.getElementById('kintoreSavedNote').textContent = isKintoreDone(d) ? '✅ きょうの きろく、ほぞんずみ' : '';
-}
-document.getElementById('kintoreSaveBtn').onclick = async ()=>{
-  const d = activeDate;
-  const squat = parseInt(document.getElementById('kintoreSquat').value,10) || 0;
-  const situp = parseInt(document.getElementById('kintoreSitup').value,10) || 0;
-  const handstand = parseInt(document.getElementById('kintoreHandstand').value,10) || 0;
-  state.kintoreByDate[d] = {squat, situp, handstand};
-  await saveState();
-  renderKintore();
-  updateTodayRing();
-  renderCalendar();
-  const btn = document.getElementById('kintoreSaveBtn');
-  btn.textContent = 'きろく できたよ! ✅';
-  setTimeout(()=>{ btn.textContent='きんとれを きろくする'; }, 1400);
-};
-
-function renderEditableLog(containerId, array, opts){
-  const el = document.getElementById(containerId);
-  el.innerHTML = '';
-  let indexed = array.map((item,i)=>({item,i})).reverse();
-  if(opts.limit) indexed = indexed.slice(0, opts.limit);
-  if(indexed.length===0){
-    el.innerHTML = '<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">まだ きろくが ないよ</div>';
-    return;
-  }
-  indexed.forEach(({item,i})=>{
-    const row = document.createElement('div');
-    row.className='book-row';
-    const dateLabel = item.date.slice(5).replace('-','/');
-    row.innerHTML = `<span class="d">${dateLabel}</span><span class="txt">${opts.formatFn(item)}</span><span class="row-actions"><button class="row-edit" title="しゅうせいする">✏️</button><button class="row-del" title="けす">✕</button></span>`;
-    row.querySelector('.row-edit').onclick = ()=>{
-      opts.onEdit(item, i);
-    };
-    row.querySelector('.row-del').onclick = async ()=>{
-      array.splice(i,1);
-      const ok = await saveState();
-      if(ok) showToast('🗑️ けしたよ');
-      opts.rerender();
-    };
-    el.appendChild(row);
-  });
-}
-
-function renderOtherHelpLog(){
-  renderEditableLog('otherHelpList', state.otherHelpLog, {
-    formatFn: item=>item.text,
-    rerender: renderOtherHelpLog,
-    onEdit: async (item, i)=>{
-      state.otherHelpLog.splice(i,1);
-      await saveState();
-      document.getElementById('otherHelpInput').value = item.text;
-      renderOtherHelpLog();
-      showToast('✏️ しゅうせいして、もういちど「きろくする」を おしてね');
-    }
-  });
-}
-document.getElementById('otherHelpSaveBtn').onclick = async ()=>{
-  const input = document.getElementById('otherHelpInput');
-  const text = input.value.trim();
-  if(!text) return;
-  state.otherHelpLog.push({date: activeDate, text});
-  await saveState();
-  input.value='';
-  renderOtherHelpLog();
-};
-
-function renderBookList(){
-  renderEditableLog('bookList', state.books, {
-    formatFn: item=>item.title,
-    rerender: renderBookList,
-    limit: 30,
-    onEdit: async (item, i)=>{
-      state.books.splice(i,1);
-      await saveState();
-      document.getElementById('bookInput').value = item.title;
-      renderBookList();
-      showToast('✏️ しゅうせいして、もういちど「きろくする」を おしてね');
-    }
-  });
-}
-
-function initTodayView(){
-  renderDateControls();
-  renderWeatherRow();
-  const d = activeDate;
-  const existingDiary = state.diaryByDate[d];
-  document.getElementById('diaryText').value = existingDiary ? existingDiary.text||'' : '';
-  renderHabitGroups(d, document.getElementById('habitGroups'), true);
-  renderKintore();
-  updateTodayRing();
-  renderBookList();
-  renderOtherHelpLog();
-  renderCounters();
-  renderEigoLog();
-  renderGongyo();
-  renderNanmyouLog();
-  renderNanmyouMinutesLog();
-}
-
-function renderCounters(){
-  const list = document.getElementById('counterList');
-  list.innerHTML = '';
-  const d = activeDate;
-  COUNTERS.forEach(c=>{
-    const target = state.counterTarget[c.id] || 1;
-    const todayAmt = (state.counterByDate[d] && state.counterByDate[d][c.id]) || 0;
-    const lifetime = state.counterProgress[c.id] || 0;
-    const achieved = todayAmt >= target && todayAmt > 0;
-    const pct = Math.min(todayAmt/target,1)*100;
-    const item = document.createElement('div');
-    item.className='counter-item';
-    item.innerHTML = `
-      ${achieved ? '<div class="complete-stamp">🌸 たっせい!</div>' : ''}
-      <div class="hw-head"><span class="name">${c.emoji} ${c.name}</span><span class="frac">きょう ${todayAmt}/${target} ${c.unit}</span></div>
-      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
-      ${achieved?`<div class="hw-complete-msg">きょうの もくひょう たっせい!すごい!🎉</div>`:''}
-      <div class="milestone-note">るいけい ${lifetime}${c.unit}</div>
-      <div class="field-label" style="margin-top:10px;">きょう なんまい/ページ できた?(ぜんぶの かずを いれてね)</div>
-      <div class="counter-add-row">
-        <input type="number" class="add-amount" id="amt-${c.id}" min="0" value="${todayAmt||''}" placeholder="0">
-        <button class="save-btn counter-record-btn" data-act="set" data-id="${c.id}">きろくする</button>
-      </div>
-      <div class="counter-controls">
-        <button class="mini-btn target" data-act="opentarget" data-id="${c.id}">🎯 もくひょう へんこう(いま ${target}${c.unit})</button>
-      </div>
-      <div class="target-edit hidden" id="targetedit-${c.id}">
-        <input type="number" id="targetinput-${c.id}" value="${target}" min="1">
-        <button data-act="savetarget" data-id="${c.id}">ほぞん</button>
-      </div>
-    `;
-    list.appendChild(item);
-  });
-
-  list.querySelectorAll('button[data-act]').forEach(btn=>{
-    const id = btn.dataset.id;
-    if(btn.dataset.act==='opentarget'){
-      btn.onclick = ()=>{
-        document.getElementById(`targetedit-${id}`).classList.toggle('hidden');
-      };
-    } else if(btn.dataset.act==='savetarget'){
-      btn.onclick = async ()=>{
-        const val = parseInt(document.getElementById(`targetinput-${id}`).value,10);
-        if(val && val>0){
-          state.counterTarget[id] = val;
-          await saveState();
-          renderCounters();
-        }
-      };
-    } else if(btn.dataset.act==='set'){
-      btn.onclick = async ()=>{
-        const d = activeDate;
-        const amtInput = document.getElementById(`amt-${id}`);
-        const newAmt = Math.max(parseInt(amtInput.value,10)||0, 0);
-        const oldAmt = (state.counterByDate[d] && state.counterByDate[d][id]) || 0;
-        const diff = newAmt - oldAmt;
-        state.counterProgress[id] = Math.max((state.counterProgress[id]||0) + diff, 0);
-        if(!state.counterByDate[d]) state.counterByDate[d]={};
-        state.counterByDate[d][id] = newAmt;
-        const ok = await saveState();
-        if(ok) showToast('✅ きろく できたよ!');
-        renderCounters();
-      };
-    }
-  });
-}
-
-function renderEigoLog(){
-  renderEditableLog('eigoList', state.eigoLog, {
-    formatFn: item=>item.title,
-    rerender: renderEigoLog,
-    onEdit: async (item, i)=>{
-      state.eigoLog.splice(i,1);
-      await saveState();
-      document.getElementById('eigoInput').value = item.title;
-      renderEigoLog();
-      showToast('✏️ しゅうせいして、もういちど「きろくする」を おしてね');
-    }
-  });
-}
-document.getElementById('eigoSaveBtn').onclick = async ()=>{
-  const input = document.getElementById('eigoInput');
-  const title = input.value.trim();
-  if(!title) return;
-  state.eigoLog.push({date: activeDate, title});
-  await saveState();
-  input.value='';
-  renderEigoLog();
-};
-
-function renderGongyo(){
-  const grid = document.getElementById('gongyoGrid');
-  grid.innerHTML = '';
-  const doneCount = GONGYO_PAGES.filter(p=>state.gongyoPages[p]).length;
-  document.getElementById('gongyoBadge').textContent = `${doneCount}/${GONGYO_PAGES.length}`;
-
-  const milestoneEl = document.getElementById('gongyoMilestone');
-  if(doneCount>=GONGYO_PAGES.length){
-    milestoneEl.textContent = 'ぜんぶの ページが よめるように なったね!すごい!🎉';
-  } else {
-    milestoneEl.textContent = '';
-  }
-
-  GONGYO_PAGES.forEach(p=>{
-    const done = !!state.gongyoPages[p];
-    const chip = document.createElement('button');
-    chip.className = 'chip' + (done?' done':'');
-    chip.style.setProperty('--bg-tint', '#EFEBFB');
-    chip.style.setProperty('--done-border', '#8B7FD1');
-    chip.innerHTML = `<span class="emoji">📖</span><span class="label">${p}ページ</span><span class="stamp">🌸</span>`;
-    chip.onclick = async ()=>{
-      if(state.gongyoPages[p]){
-        delete state.gongyoPages[p];
-      } else {
-        state.gongyoPages[p] = activeDate;
-      }
-      await saveState();
-      renderGongyo();
-    };
-    grid.appendChild(chip);
-  });
-}
-
-function renderNanmyouLog(){
-  document.getElementById('nanmyouBadge').textContent = `${state.nanmyouLog.length}/${state.nanmyouTarget}`;
-
-  const milestoneEl = document.getElementById('nanmyouMilestone');
-  const n = state.nanmyouLog.length;
-  if(n>=state.nanmyouTarget){
-    milestoneEl.textContent = `${state.nanmyouTarget}こ たっせい!すごいね!🎉`;
-  } else if(n>=50){
-    milestoneEl.textContent = `もう ${n}こ!はんぶん いじょう だよ!`;
-  } else if(n>=30){
-    milestoneEl.textContent = `${n}こ めの ごきねん!すごい ペース!`;
-  } else {
-    milestoneEl.textContent = '';
-  }
-
-  renderEditableLog('nanmyouList', state.nanmyouLog, {
-    formatFn: item=>item.text,
-    rerender: renderNanmyouLog,
-    onEdit: async (item, i)=>{
-      state.nanmyouLog.splice(i,1);
-      await saveState();
-      document.getElementById('nanmyouText').value = item.text;
-      renderNanmyouLog();
-      showToast('✏️ しゅうせいして、もういちど「とうろくする」を おしてね');
-    }
-  });
-}
-document.getElementById('nanmyouSaveBtn').onclick = async ()=>{
-  const input = document.getElementById('nanmyouText');
-  const text = input.value.trim();
-  if(!text) return;
-  state.nanmyouLog.push({date: activeDate, text});
-  const ok = await saveState();
-  if(ok) showToast('✅ ごきねん とうろく できたよ!');
-  input.value='';
-  renderNanmyouLog();
-};
-
-function renderNanmyouMinutesLog(){
-  const total = state.nanmyouMinutesLog.reduce((s,m)=>s+(m.minutes||0),0);
-  document.getElementById('nanmyouMinutesTotal').textContent = total>0 ? `るいけい ${total}ふん おいのり したよ` : '';
-
-  renderEditableLog('nanmyouMinutesList', state.nanmyouMinutesLog, {
-    formatFn: item=>`${item.minutes}ふん`,
-    rerender: renderNanmyouMinutesLog,
-    onEdit: async (item, i)=>{
-      state.nanmyouMinutesLog.splice(i,1);
-      await saveState();
-      document.getElementById('nanmyouMinutesInput').value = item.minutes;
-      renderNanmyouMinutesLog();
-      showToast('✏️ しゅうせいして、もういちど「とうろくする」を おしてね');
-    }
-  });
-}
-document.getElementById('nanmyouMinutesSaveBtn').onclick = async ()=>{
-  const input = document.getElementById('nanmyouMinutesInput');
-  const minutes = parseInt(input.value,10) || 0;
-  if(minutes<=0) return;
-  state.nanmyouMinutesLog.push({date: activeDate, minutes});
-  const ok = await saveState();
-  if(ok) showToast('✅ ふんすう とうろく できたよ!');
-  input.value='';
-  renderNanmyouMinutesLog();
-};
-
-document.getElementById('diarySaveBtn').onclick = async ()=>{
-  const d = activeDate;
-  const weather = document.getElementById('weatherRow').dataset.selected || '';
-  const text = document.getElementById('diaryText').value.trim();
-  state.diaryByDate[d] = {weather, text};
-  await saveState();
-  const btn = document.getElementById('diarySaveBtn');
-  btn.textContent = 'ほぞん できたよ! ✅';
-  btn.classList.add('saved');
-  setTimeout(()=>{ btn.textContent='にっきを ほぞんする'; btn.classList.remove('saved'); }, 1400);
-  renderCalendar();
-};
-
-document.getElementById('bookSaveBtn').onclick = async ()=>{
-  const input = document.getElementById('bookInput');
-  const title = input.value.trim();
-  if(!title) return;
-  state.books.push({date: activeDate, title});
-  await saveState();
-  input.value='';
-  renderBookList();
-};
-
-function renderHomework(){
-  document.getElementById('hwDateNote').textContent = `📅 ${labelDate(activeDate)} の きろくとして ついかされます`;
-  const list = document.getElementById('hwList');
-  list.innerHTML = '';
-  HOMEWORK.forEach(hw=>{
-    const cur = state.homeworkProgress[hw.id] || 0;
-    const pct = Math.min(cur/hw.total,1);
-    const item = document.createElement('div');
-    item.className='hw-item';
-    item.innerHTML = `
-      ${cur>=hw.total ? '<div class="complete-stamp">🌸 まんてん!</div>' : ''}
-      <div class="hw-head"><span class="name">${hw.emoji} ${hw.name}</span><span class="frac">${cur}/${hw.total} ページ</span></div>
-      <div class="tree-wrap">
-        <div class="tree">
-          <div class="trunk"></div>
-          <div class="beetle" style="bottom:${pct*72}px">🪲</div>
-        </div>
-        <div class="hw-controls">
-          <div class="bar-track"><div class="bar-fill" style="width:${pct*100}%"></div></div>
-          <div class="stepper">
-            <button data-act="minus" data-id="${hw.id}" ${cur<=0?'disabled':''}>−</button>
-            <span class="pages-left">${cur>=hw.total ? 'ぜんぶ おわったよ!🎉' : `あと ${hw.total-cur} ページ`}</span>
-            <button data-act="plus" data-id="${hw.id}" ${cur>=hw.total?'disabled':''}>＋</button>
-          </div>
-        </div>
-      </div>
-    `;
-    list.appendChild(item);
-  });
-  list.querySelectorAll('button[data-act]').forEach(btn=>{
-    btn.onclick = async ()=>{
-      const id = btn.dataset.id;
-      const hw = HOMEWORK.find(h=>h.id===id);
-      const cur = state.homeworkProgress[id] || 0;
-      const d = activeDate;
-      if(btn.dataset.act==='plus' && cur<hw.total){
-        state.homeworkProgress[id] = cur+1;
-        if(!state.homeworkByDate[d]) state.homeworkByDate[d]={};
-        state.homeworkByDate[d][id] = (state.homeworkByDate[d][id]||0)+1;
-      } else if(btn.dataset.act==='minus' && cur>0){
-        state.homeworkProgress[id] = cur-1;
-        if(state.homeworkByDate[d] && state.homeworkByDate[d][id]){
-          state.homeworkByDate[d][id] = Math.max(state.homeworkByDate[d][id]-1,0);
-        }
-      }
-      await saveState();
-      renderHomework();
-    };
-  });
-
-  const ot = document.getElementById('onetimeList');
-  ot.innerHTML = '';
-  ONETIME.forEach(o=>{
-    const done = !!state.oneTimeDone[o.id];
-    const row = document.createElement('div');
-    row.className='onetime-row'+(done?' done':'');
-    row.innerHTML = `<span class="emoji">${o.emoji}</span><span class="label">${o.name}</span><button>${done?'できた!':'まだ'}</button>`;
-    row.querySelector('button').onclick = async ()=>{
-      if(state.oneTimeDone[o.id]){
-        delete state.oneTimeDone[o.id];
-      } else {
-        state.oneTimeDone[o.id] = activeDate;
-      }
-      await saveState();
-      renderHomework();
-    };
-    ot.appendChild(row);
-  });
-}
-
-function daysInclusive(start,end){
-  const arr=[];
-  let d = new Date(start);
-  while(d<=end){ arr.push(new Date(d)); d.setDate(d.getDate()+1); }
-  return arr;
-}
-function renderCalendar(){
-  const container = document.getElementById('calendarMonths');
-  container.innerHTML = '';
-  const allDays = daysInclusive(START_DATE, END_DATE);
-  const byMonth = {};
-  allDays.forEach(d=>{
-    const key = `${d.getFullYear()}-${d.getMonth()}`;
-    if(!byMonth[key]) byMonth[key]=[];
-    byMonth[key].push(d);
-  });
-  Object.keys(byMonth).forEach(key=>{
-    const days = byMonth[key];
-    const monthNum = days[0].getMonth()+1;
-    const label = document.createElement('div');
-    label.className='month-label';
-    label.textContent = `${monthNum}がつ`;
-    container.appendChild(label);
-
-    const grid = document.createElement('div');
-    grid.className='cal-grid';
-    ['にち','げつ','か','すい','もく','きん','ど'].forEach(dow=>{
-      const el = document.createElement('div');
-      el.className='cal-dow'; el.textContent=dow;
-      grid.appendChild(el);
-    });
-    const firstDow = days[0].getDay();
-    for(let i=0;i<firstDow;i++){
-      const el = document.createElement('div');
-      el.className='cal-cell empty';
-      grid.appendChild(el);
-    }
-    days.forEach(d=>{
-      const dstr = fmtDate(d);
-      const cell = document.createElement('div');
-      let cls = 'cal-cell';
-      if(dstr===todayStr()) cls += ' today';
-      if(dstr===activeDate) cls += ' selected';
-      cell.className = cls;
-      const doneMap = state.habitsByDate[dstr]||{};
-      const doneCount = Object.keys(doneMap).length;
-      const hasDiary = state.diaryByDate[dstr] && state.diaryByDate[dstr].text;
-      let dotsHtml = '';
-      const dotCount = Math.min(Math.ceil(doneCount/4),4);
-      for(let i=0;i<dotCount;i++) dotsHtml += '<span></span>';
-      cell.innerHTML = `${d.getDate()}${hasDiary?'<span class="diary-mark">📔</span>':''}<div class="dots">${dotsHtml}</div>`;
-      cell.onclick = ()=>{
-        setActiveDate(dstr);
-        activateTab('today');
-      };
-      grid.appendChild(cell);
-    });
-    container.appendChild(grid);
-  });
-}
-
-const GRAPH_CATEGORIES = [
-  {id:'nanmyou_content', label:'ごきねん の ないよう いちらん'},
-  {id:'nanmyou', label:'なんみょう'},
-  {id:'gongyo', label:'ごんぎょう'},
-  {id:'counters', label:'チャレンジ'},
-  {id:'eigo', label:'えいごの えいが'},
-  {id:'habits', label:'しゅうかん'},
-  {id:'homework', label:'しゅくだい'},
-  {id:'kintore', label:'きんとれ'},
-];
-
-function graphDateList(){
-  const end = new Date() < END_DATE ? new Date() : END_DATE;
-  const list = daysInclusive(START_DATE, end).map(fmtDate);
-  return list.reverse();
-}
-
-function buildContentListHtml(logArray, headerLabel, textKey){
-  const list = [...logArray].slice().reverse();
-  if(list.length===0){
-    return '<div style="text-align:center;font-size:12px;color:var(--ink-soft);font-weight:700;padding:14px 0;">まだ きろくが ないよ</div>';
-  }
-  let html = `<div class="graph-table-wrap"><table><thead><tr><th class="date-col">ひづけ</th><th style="min-width:180px;text-align:left;">${headerLabel}</th></tr></thead><tbody>`;
-  list.forEach(item=>{
-    const [y,m,day] = item.date.split('-').map(Number);
-    html += `<tr><td class="date-col">${m}/${day}</td><td style="text-align:left;white-space:normal;">${item[textKey]}</td></tr>`;
-  });
-  html += '</tbody></table></div>';
-  return html;
-}
-
-function renderGraphTab(){
-  const wrap = document.getElementById('graphTableWrap');
-  wrap.innerHTML = '';
-  GRAPH_CATEGORIES.forEach(cat=>{
-    const section = document.createElement('div');
-    section.className = 'graph-section';
-    section.innerHTML = `<div class="graph-section-title">${cat.label}</div>`;
-    if(cat.id==='eigo'){
-      section.innerHTML += buildContentListHtml(state.eigoLog, '🎬 みた えいがの タイトル', 'title');
-    } else if(cat.id==='nanmyou_content'){
-      section.innerHTML += buildContentListHtml(state.nanmyouLog, '🙏 ごきねん した ないよう', 'text');
-    } else {
-      section.innerHTML += buildGraphTableHtml(cat.id);
-    }
-    wrap.appendChild(section);
-  });
-}
-
-function buildGraphTableHtml(category){
-  const dates = graphDateList();
-  let columns = [];
-  let getCell;
-
-  if(category==='habits'){
-    columns = HABITS.map(h=>({key:h.id, label:`${h.emoji}<br>${h.name}`, title:h.name}));
-    getCell = (d,key)=>{
-      const done = state.habitsByDate[d] && state.habitsByDate[d][key];
-      return done ? {text:'🌸', cls:'hit'} : {text:'', cls:''};
-    };
-  } else if(category==='kintore'){
-    columns = [{key:'squat', label:'💪<br>スクワット', title:'スクワット'},{key:'situp', label:'💪<br>ふっきん', title:'ふっきん'},{key:'handstand', label:'🤸<br>さかだち', title:'さかだち'}];
-    getCell = (d,key)=>{
-      const k = state.kintoreByDate[d];
-      if(!k || !k[key]) return {text:'', cls:''};
-      return {text:String(k[key]), cls:'num'};
-    };
-  } else if(category==='homework'){
-    columns = HOMEWORK.map(h=>({key:h.id, label:`${h.emoji}<br>${h.name}`, title:h.name}));
-    getCell = (d,key)=>{
-      const v = state.homeworkByDate[d] && state.homeworkByDate[d][key];
-      return v ? {text:String(v), cls:'num'} : {text:'', cls:''};
-    };
-  } else if(category==='counters'){
-    columns = COUNTERS.map(c=>({key:c.id, label:`${c.emoji}<br>${c.name}`, title:c.name}));
-    getCell = (d,key)=>{
-      const v = state.counterByDate[d] && state.counterByDate[d][key];
-      return v ? {text:String(v), cls:'num'} : {text:'', cls:''};
-    };
-  } else if(category==='gongyo'){
-    columns = GONGYO_PAGES.map(p=>({key:p, label:`📖<br>${p}p`, title:`${p}ページ`}));
-    getCell = (d,key)=>{
-      const done = state.gongyoPages[key]===d;
-      return done ? {text:'🌸', cls:'hit'} : {text:'', cls:''};
-    };
-  } else if(category==='nanmyou'){
-    columns = [{key:'minutes', label:'⏱️<br>ふん', title:'いのった ふんすう'}];
-    getCell = (d,key)=>{
-      const minEntries = state.nanmyouMinutesLog.filter(m=>m.date===d);
-      if(minEntries.length===0) return {text:'', cls:''};
-      const mins = minEntries.reduce((s,m)=>s+(m.minutes||0),0);
-      return {text: mins>0 ? String(mins) : '', cls:'num'};
-    };
-  }
-
-  const rowsWithData = dates.filter(d=>{
-    return columns.some(col=>getCell(d,col.key).text!=='');
-  });
-  const shownDates = rowsWithData.length>0 ? rowsWithData : dates.slice(0,7);
-
-  let html = '<div class="graph-table-wrap"><table><thead><tr><th class="date-col">ひづけ</th>';
-  columns.forEach(col=>{ html += `<th title="${col.title||''}">${col.label}</th>`; });
-  html += '</tr></thead><tbody>';
-  shownDates.forEach(d=>{
-    const [y,m,day] = d.split('-').map(Number);
-    html += `<tr><td class="date-col">${m}/${day}</td>`;
-    columns.forEach(col=>{
-      const cell = getCell(d,col.key);
-      html += `<td class="${cell.cls}">${cell.text}</td>`;
-    });
-    html += '</tr>';
-  });
-  html += '</tbody></table></div>';
-
-  if(rowsWithData.length===0){
-    html = '<div style="text-align:center;font-size:12px;color:var(--ink-soft);font-weight:700;padding:14px 0;">まだ きろくが ないよ</div>' + html;
-  }
-  return html;
-}
-
-function computeStreak(){
-  let streak = 0;
-  let d = new Date();
-  while(true){
-    const dstr = fmtDate(d);
-    const doneMap = state.habitsByDate[dstr]||{};
-    if(Object.keys(doneMap).length>0){
-      streak++;
-      d.setDate(d.getDate()-1);
-    } else break;
-  }
-  return streak;
-}
-
-function renderReport(){
-  const d = activeDate;
-  document.getElementById('reportDateLabel').textContent = labelDate(d) + (d===todayStr() ? '' : '(さかのぼり)');
-  document.getElementById('streakNum').textContent = computeStreak();
-
-  const list = document.getElementById('reportList');
-  list.innerHTML = '';
-  let count = 0;
-
-  const doneMap = state.habitsByDate[d] || {};
-  HABITS.forEach(h=>{
-    if(doneMap[h.id]){
-      count++;
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="emoji">${h.emoji}</span><span>${h.name}</span>`;
-      list.appendChild(li);
-    }
-  });
-
-  if(isKintoreDone(d)){
-    count++;
-    const k = state.kintoreByDate[d];
-    const parts = [];
-    if(k.squat>0) parts.push(`スクワット${k.squat}かい`);
-    if(k.situp>0) parts.push(`ふっきん${k.situp}かい`);
-    if(k.handstand>0) parts.push(`さかだち${k.handstand}ふん`);
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="emoji">💪</span><span>きんとれ:${parts.join('・')} がんばった!</span>`;
-    list.appendChild(li);
-  }
-
-  state.otherHelpLog.filter(o=>o.date===d).forEach(o=>{
-    count++;
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="emoji">✏️</span><span>おてつだい「${o.text}」を やった!</span>`;
-    list.appendChild(li);
-  });
-
-  const hwToday = state.homeworkByDate[d] || {};
-  HOMEWORK.forEach(hw=>{
-    if(hwToday[hw.id]){
-      count++;
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="emoji">${hw.emoji}</span><span>${hw.name} を ${hwToday[hw.id]}ページ すすめた</span>`;
-      list.appendChild(li);
-    }
-  });
-
-  const counterToday = state.counterByDate[d] || {};
-  COUNTERS.forEach(c=>{
-    if(counterToday[c.id]){
-      count++;
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="emoji">${c.emoji}</span><span>${c.name} を ${counterToday[c.id]}${c.unit} がんばった(るいけい ${state.counterProgress[c.id]}${c.unit})</span>`;
-      list.appendChild(li);
-    }
-  });
-
-  state.eigoLog.filter(e=>e.date===d).forEach(e=>{
-    count++;
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="emoji">🎬</span><span>えいご の えいが「${e.title}」を みた</span>`;
-    list.appendChild(li);
-  });
-
-  const gongyoToday = GONGYO_PAGES.filter(p=>state.gongyoPages[p]===d);
-  if(gongyoToday.length>0){
-    count++;
-    const gongyoDoneTotal = GONGYO_PAGES.filter(p=>state.gongyoPages[p]).length;
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="emoji">📖</span><span>ごんぎょう ${gongyoToday.join('・')}ページめ が よめるように なった!(るいけい ${gongyoDoneTotal}/${GONGYO_PAGES.length}ページ)</span>`;
-    list.appendChild(li);
-  }
-
-  const nanmyouToday = state.nanmyouLog.filter(n=>n.date===d);
-  if(nanmyouToday.length>0){
-    count++;
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="emoji">🙏</span><span>なんみょう を ${nanmyouToday.length}こ ごきねん した(るいけい ${state.nanmyouLog.length}こ)</span>`;
-    list.appendChild(li);
-  }
-
-  const nanmyouMinutesToday = state.nanmyouMinutesLog.filter(m=>m.date===d);
-  if(nanmyouMinutesToday.length>0){
-    count++;
-    const minutesTotal = nanmyouMinutesToday.reduce((sum,m)=>sum+(m.minutes||0),0);
-    const allTotal = state.nanmyouMinutesLog.reduce((sum,m)=>sum+(m.minutes||0),0);
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="emoji">⏱️</span><span>なんみょう を ${minutesTotal}ふん おいのり した(るいけい ${allTotal}ふん)</span>`;
-    list.appendChild(li);
-  }
-
-  ONETIME.forEach(o=>{
-    if(state.oneTimeDone[o.id]===d){
-      count++;
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="emoji">${o.emoji}</span><span>${o.name} を やった!</span>`;
-      list.appendChild(li);
-    }
-  });
-
-  if(state.books.some(b=>b.date===d)){
-    count++;
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="emoji">📖</span><span>ほんを よんで きろくした</span>`;
-    list.appendChild(li);
-  }
-
-  document.getElementById('reportEmpty').classList.toggle('hidden', count>0);
-
-  const diaryQuoteEl = document.getElementById('reportDiaryQuote');
-  const diary = state.diaryByDate[d];
-  if(diary && diary.text){
-    diaryQuoteEl.innerHTML = `<div class="diary-quote">${diary.weather?diary.weather+' ':''}「${diary.text}」</div>`;
-  } else {
-    diaryQuoteEl.innerHTML = '';
-  }
-}
-
-const views = {
-  today: document.getElementById('view-today'),
-  homework: document.getElementById('view-homework'),
-  calendar: document.getElementById('view-calendar'),
-  graph: document.getElementById('view-graph'),
-  report: document.getElementById('view-report'),
-};
-function activateTab(tabName){
-  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tabName));
-  Object.keys(views).forEach(k=>views[k].classList.toggle('hidden', k!==tabName));
-  if(tabName==='homework') renderHomework();
-  if(tabName==='calendar') renderCalendar();
-  if(tabName==='graph') renderGraphTab();
-  if(tabName==='report') renderReport();
-}
-document.querySelectorAll('nav.tabs button').forEach(btn=>{
-  btn.onclick = ()=> activateTab(btn.dataset.tab);
-});
-
-document.getElementById('prevDayBtn').onclick = ()=>{
-  const d = new Date(activeDate);
-  d.setDate(d.getDate()-1);
-  setActiveDate(fmtDate(d));
-  renderCalendar();
-};
-document.getElementById('nextDayBtn').onclick = ()=>{
-  const d = new Date(activeDate);
-  d.setDate(d.getDate()+1);
-  setActiveDate(fmtDate(d));
-  renderCalendar();
-};
-document.getElementById('activeDateInput').onchange = (e)=>{
-  if(e.target.value){
-    setActiveDate(e.target.value);
-    renderCalendar();
-  }
-};
-document.getElementById('jumpTodayBtn').onclick = ()=>{
-  setActiveDate(todayStr());
-  renderCalendar();
-};
-
-document.getElementById('retryLoadBtn').onclick = ()=>{
-  location.reload();
-};
-
-document.getElementById('backupDownloadBtn').onclick = async ()=>{
-  try{
-    state.lastBackupAt = Date.now();
-    await saveState();
-    const dataStr = JSON.stringify(state, null, 2);
-    const blob = new Blob([dataStr], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const stamp = todayStr().replace(/-/g,'');
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `natsu2026-backup-${stamp}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url), 2000);
-    checkBackupReminder();
-    showToast('📥 バックアップを ダウンロードしたよ');
-  }catch(e){
-    console.error('backup download failed', e);
-    showToast('⚠️ ダウンロードに しっぱいしたよ');
-  }
-};
-
-let pendingRestoreData = null;
-document.getElementById('backupRestoreInput').onchange = (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (ev)=>{
-    try{
-      const parsed = JSON.parse(ev.target.result);
-      pendingRestoreData = parsed;
-      document.getElementById('restoreConfirmArea').classList.remove('hidden');
-    }catch(err){
-      console.error('backup file parse failed', err);
-      showToast('⚠️ ファイルが よみとれなかったよ。JSONファイルを えらんでね');
-    }
-  };
-  reader.readAsText(file);
-};
-
-document.getElementById('restoreConfirmBtn').onclick = async ()=>{
-  if(!pendingRestoreData) return;
-  const btn = document.getElementById('restoreConfirmBtn');
-  btn.disabled = true;
-  btn.textContent = 'ふくげんちゅう...';
-  state = Object.assign(JSON.parse(JSON.stringify(SEED_STATE)), pendingRestoreData);
-  dataLoaded = true;
-  const ok = await saveState();
-  btn.disabled = false;
-  btn.textContent = 'はい、もどす';
-  document.getElementById('restoreConfirmArea').classList.add('hidden');
-  document.getElementById('backupRestoreInput').value = '';
-  pendingRestoreData = null;
-  if(ok){
-    refreshAllViews();
-    renderCalendar();
-    showToast('✅ ふくげん できたよ!');
-  }
-};
-
-// ---------- PWA: Service Worker 登録 ----------
-if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('sw.js').catch((e)=>console.error('SW登録失敗', e));
-  });
-}
-
-// ---------- INIT ----------
-subscribeToState();
-
-})();
 </script>
 </body>
 </html>
